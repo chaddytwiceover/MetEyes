@@ -1,0 +1,159 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#search-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#searchInput {
+    padding: 10px;
+    width: 70%;
+    max-width: 400px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+#searchButton {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#searchButton:hover {
+    background-color: #0056b3;
+}
+
+#art-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.art-card {
+    border: 1px solid #eee;
+    padding: 15px;
+    text-align: center;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.art-card:hover {
+    transform: translateY(-5px);
+}
+
+.art-card img {
+    max-width: 100%;
+    height: 200px;
+    object-fit: contain; /* Changed from cover to contain */
+    margin-bottom: 10px;
+}
+
+.art-card h3 {
+    font-size: 1.1em;
+    margin: 10px 0 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.art-card p {
+    font-size: 0.9em;
+    color: #666;
+}
+
+#art-detail {
+    padding: 20px;
+    border: 1px solid #eee;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#art-detail img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px;
+}
+
+#art-detail h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+#art-detail p {
+    margin-bottom: 5px;
+}
+
+#backToGallery {
+    padding: 10px 15px;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+#backToGallery:hover {
+    background-color: #5a6268;
+}
+
+#gemini-response {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #e9f7ef;
+    border-left: 5px solid #28a745;
+}
+
+#gemini-response h3 {
+    color: #28a745;
+}
+
+#askGeminiButton {
+    padding: 8px 15px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#askGeminiButton:hover {
+    background-color: #218838;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    background-color: #333;
+    color: #fff;
+}
