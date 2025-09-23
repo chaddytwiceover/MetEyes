@@ -1,25 +1,59 @@
+:root {
+    --bg-color: #FAFAF8;
+    --text-color: #121212;
+    --accent-color: #7B1E3B; /* Deep Burgundy */
+    --secondary-color: #6c757d;
+    --gemini-bg: #f2e9ec;
+    --gemini-border: var(--accent-color);
+    --font-headline: 'Cormorant Garamond', serif;
+    --font-body: 'Inter', sans-serif;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font-body);
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-top: 80px; /* Space for fixed header */
 }
 
 header {
-    background-color: #333;
-    color: #fff;
-    padding: 1rem 0;
-    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(250, 250, 248, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e0e0e0;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 20px;
+}
+
+.app-title {
+    font-family: var(--font-headline);
+    font-size: 1.8rem;
+    margin: 0;
 }
 
 main {
     padding: 20px;
     max-width: 1200px;
     margin: 20px auto;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: opacity 0.3s ease-in-out;
+    background-color: transparent;
+    box-shadow: none;
 }
 
 #search-section {
@@ -35,15 +69,15 @@ main {
     border-radius: 4px;
     margin-right: 10px;
 }
-/* Accessibility: Add focus indicator */
+
 #searchInput:focus {
-    outline: 2px solid #007bff;
+    outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
 
-#searchButton {
+#searchButton, #loadMoreButton, #favoritesNavButton {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: var(--accent-color);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -51,19 +85,19 @@ main {
 }
 
 #searchButton:disabled {
-    background-color: #6c757d;
+    background-color: var(--secondary-color);
     cursor: not-allowed;
 }
 
-#searchButton:hover {
-    background-color: #0056b3;
+#searchButton:hover:not(:disabled), #loadMoreButton:hover, #favoritesNavButton:hover {
+    background-color: #5a162c;
 }
 
-/* Accessibility: Add focus indicator */
-#searchButton:focus, #backToGallery:focus, #askGeminiButton:focus {
-    outline: 2px solid #0056b3;
+#searchButton:focus, #backToGallery:focus, #askGeminiButton:focus, #loadMoreButton:focus, #favoritesNavButton:focus {
+    outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
+
 .search-error {
     color: #dc3545;
     margin-top: 10px;
@@ -71,32 +105,115 @@ main {
 }
 
 #art-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
 }
 
 .art-card {
-    border: 1px solid #eee;
-    padding: 15px;
-    text-align: center;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow-sm);
+    border-radius: 8px;
+    overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
     opacity: 0; /* Start as transparent for fade-in */
     animation: fadeIn 0.5s forwards;
 }
 
 .art-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+}
+
+.art-card-image-wrapper {
+    position: relative;
+    height: 250px;
+}
+
+.art-card-image-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.art-card:hover .art-card-image-wrapper::after {
+    opacity: 1;
+}
+
+.art-card-info {
+    padding: 15px;
+}
+
+.art-card-info-hover {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    color: white;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 2;
+}
+
+.art-card:hover .art-card-info-hover {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .art-card img {
     max-width: 100%;
-    height: 200px;
-    object-fit: contain; /* Changed from cover to contain */
-    margin-bottom: 10px;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.art-card:hover img {
+    transform: scale(1.05);
+}
+
+.favorite-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    transition: background 0.2s;
+}
+
+.favorite-btn:hover {
+    background: white;
+}
+
+.favorite-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--text-color);
+    stroke-width: 2;
+    fill: none;
+    transition: fill 0.2s, stroke 0.2s;
+}
+
+.favorite-btn.favorited svg {
+    fill: var(--accent-color);
+    stroke: var(--accent-color);
 }
 
 .art-card h3 {
@@ -107,18 +224,22 @@ main {
     text-overflow: ellipsis;
 }
 
-.art-card p {
+.art-card-info p {
     font-size: 0.9em;
-    color: #666;
+    color: var(--secondary-color);
+    margin: 0;
 }
 
 #art-detail {
     padding: 20px;
-    border: 1px solid #eee;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-color);
     opacity: 0; /* Start as transparent for fade-in */
     animation: fadeIn 0.5s forwards;
+}
+
+#art-info {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 #art-detail img {
@@ -129,7 +250,8 @@ main {
 }
 
 #art-detail h2 {
-    font-size: 1.8em;
+    font-family: var(--font-headline);
+    font-size: 2.5rem;
     margin-bottom: 10px;
 }
 
@@ -139,7 +261,7 @@ main {
 
 #backToGallery {
     padding: 10px 15px;
-    background-color: #6c757d;
+    background-color: var(--secondary-color);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -148,23 +270,24 @@ main {
 }
 
 #backToGallery:hover {
-    background-color: #5a6268;
+    background-color: #52585d;
 }
 
 #gemini-response {
     margin-top: 30px;
     padding: 15px;
-    background-color: #e9f7ef;
-    border-left: 5px solid #28a745;
+    background-color: var(--gemini-bg);
+    border-left: 5px solid var(--gemini-border);
+    border-radius: 4px;
 }
 
 #gemini-response h3 {
-    color: #28a745;
+    color: var(--accent-color);
 }
 
 #askGeminiButton {
     padding: 8px 15px;
-    background-color: #28a745;
+    background-color: var(--accent-color);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -173,20 +296,32 @@ main {
 }
 
 #askGeminiButton:hover {
-    background-color: #218838;
+    background-color: #5a162c;
+}
+
+#pagination-section {
+    text-align: center;
+    margin-top: 40px;
 }
 
 footer {
     text-align: center;
     padding: 20px;
     margin-top: 40px;
-    background-color: #333;
-    color: #fff;
+    background-color: #e0e0e0;
+    color: var(--secondary-color);
+    font-size: 0.9em;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Accessibility: class to visually hide elements but keep them for screen readers */
 .visually-hidden {
     position: absolute;
+    position: absolute !important;
     width: 1px;
     height: 1px;
     padding: 0;
@@ -200,7 +335,7 @@ footer {
 /* Loading Spinner Styles */
 .loading-spinner {
     border: 5px solid #f3f3f3; /* Light grey */
-    border-top: 5px solid #3498db; /* Blue */
+    border-top: 5px solid var(--accent-color);
     border-radius: 50%;
     width: 50px;
     height: 50px;
@@ -216,5 +351,20 @@ footer {
 @keyframes fadeIn {
     to {
         opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-title {
+        font-size: 1.5rem;
+    }
+    #art-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    #art-gallery {
+        grid-template-columns: 1fr;
     }
 }

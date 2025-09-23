@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Met Gallery AI Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>Met Gallery AI Guide</h1>
-        <p>Explore art with your personal AI assistant!</p>
+        <div class="header-content">
+            <h1 class="app-title">Met Gallery AI Guide</h1>
+            <nav>
+                <button id="favoritesNavButton">Favorites</button>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -25,6 +32,10 @@
             <div class="loading-spinner" style="display: none;"></div>
             <!-- Art pieces will be dynamically loaded here -->
             <p id="noResults" style="display: none;">No results found. Try a different search!</p>
+        </section>
+
+        <section id="pagination-section" style="display: none;">
+            <button id="loadMoreButton">Load More</button>
         </section>
 
         <section id="art-detail" style="display: none;">
@@ -45,7 +56,10 @@
     </main>
 
     <footer>
-        <p id="copyright">&copy; 2023 Met Gallery AI Guide</p>
+        <div class="footer-content">
+            <p id="copyright">&copy; 2023 Met Gallery AI Guide</p>
+            <p class="powered-by">Powered by the Met Collection API & Google Gemini</p>
+        </div>
     </footer>
 
     <script src="script.js"></script>

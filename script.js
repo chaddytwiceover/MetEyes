@@ -23,6 +23,9 @@ const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
 const artGallery = document.getElementById('art-gallery');
 const noResultsMessage = document.getElementById('noResults');
+const paginationSection = document.getElementById('pagination-section');
+const loadMoreButton = document.getElementById('loadMoreButton');
+const favoritesNavButton = document.getElementById('favoritesNavButton');
 const searchError = document.getElementById('search-error');
 const loadingSpinner = document.querySelector('.loading-spinner');
 const artDetailSection = document.getElementById('art-detail');
@@ -35,13 +38,22 @@ const detailMedium = document.getElementById('detail-medium');
 const geminiText = document.getElementById('gemini-text');
 const askGeminiButton = document.getElementById('askGeminiButton');
 
+// --- State Management ---
 let currentArtObject = null; // To store the currently displayed art object for Gemini
+let allObjectIDs = [];
+let currentPage = 0;
+const RESULTS_PER_PAGE = 21;
+let favorites = JSON.parse(localStorage.getItem('metFavorites')) || [];
+let isFavoritesView = false;
 
 // --- Met Gallery API Functions ---
 
 async function searchMetArt(query) {
     // Clear previous results and show spinner
+    isFavoritesView = false;
+    currentPage = 0;
     artGallery.innerHTML = '';
+    paginationSection.style.display = 'none';
     noResultsMessage.style.display = 'none';
     searchError.textContent = '';
     loadingSpinner.style.display = 'block';
@@ -57,14 +69,13 @@ async function searchMetArt(query) {
         if (!data.objectIDs || data.total === 0) {
             artGallery.innerHTML = '';
             noResultsMessage.style.display = 'block';
+            allObjectIDs = [];
             return [];
         }
 
-        // Fetch details for the first few objects (or more if you want)
-        // For a more robust app, you might implement pagination.
-        const objectIds = data.objectIDs.slice(0, 20); // Limit to first 20 results for initial display
-        const artPromises = objectIds.map(id => getArtDetails(id));
-        const artPieces = await Promise.all(artPromises);
+        allObjectIDs = data.objectIDs;
+        const artPieces = await loadMoreArt();
+        return artPieces;
 
         // Filter out any null responses if an object could not be fetched
         return artPieces.filter(piece => piece !== null);
@@ -77,6 +88,23 @@ async function searchMetArt(query) {
         loadingSpinner.style.display = 'none';
         searchButton.disabled = false;
     }
+}
+
+async function loadMoreArt() {
+    if (allObjectIDs.length === 0) return [];
+
+    const start = currentPage * RESULTS_PER_PAGE;
+    const end = start + RESULTS_PER_PAGE;
+    const objectIdsToFetch = allObjectIDs.slice(start, end);
+
+    if (objectIdsToFetch.length === 0) {
+        paginationSection.style.display = 'none';
+        return [];
+    }
+
+    const artPromises = objectIdsToFetch.map(id => getArtDetails(id));
+    const artPieces = await Promise.all(artPromises.map(p => p.catch(e => null))); // Prevent one failure from stopping all
+    return artPieces.filter(piece => piece !== null && piece.primaryImageSmall);
 }
 
 async function getArtDetails(objectId) {
@@ -93,26 +121,75 @@ async function getArtDetails(objectId) {
     }
 }
 
-function displayArtPieces(artPieces) {
-    artGallery.innerHTML = '';
-    if (artPieces.length === 0) {
+function displayArtPieces(artPieces, clear = false) {
+    if (clear) {
+        artGallery.innerHTML = '';
+    }
+
+    if (artPieces.length === 0 && currentPage === 0) {
         noResultsMessage.style.display = 'block';
+        paginationSection.style.display = 'none';
         return;
     }
 
+    noResultsMessage.style.display = 'none';
+
     artPieces.forEach(art => {
-        if (art.primaryImageSmall) { // Only display if an image exists
-            const artCard = document.createElement('div');
-            artCard.classList.add('art-card');
-            artCard.innerHTML = `
+        const isFavorited = favorites.includes(art.objectID);
+        const artCard = document.createElement('div');
+        artCard.classList.add('art-card');
+        artCard.innerHTML = `
+            <div class="art-card-image-wrapper">
                 <img src="${art.primaryImageSmall}" alt="Artwork titled: ${art.title || 'Untitled'}">
+            </div>
+            <div class="art-card-info">
                 <h3>${art.title || 'Untitled'}</h3>
                 <p>${art.artistDisplayName || 'Unknown Artist'}</p>
-            `;
-            artCard.addEventListener('click', () => showArtDetail(art));
-            artGallery.appendChild(artCard);
-        }
+            </div>
+            <div class="art-card-info-hover">
+                <h3>${art.title || 'Untitled'}</h3>
+                <p>${art.artistDisplayName || 'Unknown Artist'}</p>
+            </div>
+            <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" aria-label="Add to favorites" data-id="${art.objectID}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </button>
+        `;
+        artCard.addEventListener('click', (e) => {
+            if (!e.target.closest('.favorite-btn')) {
+                showArtDetail(art);
+            }
+        });
+        artGallery.appendChild(artCard);
     });
+
+    // Handle pagination visibility
+    const totalDisplayed = artGallery.children.length;
+    if (!isFavoritesView && allObjectIDs.length > totalDisplayed) {
+        paginationSection.style.display = 'block';
+    } else {
+        paginationSection.style.display = 'none';
+    }
+
+    // Add event listeners to new favorite buttons
+    document.querySelectorAll('.favorite-btn:not([data-listener-added])').forEach(btn => {
+        btn.setAttribute('data-listener-added', 'true');
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(btn);
+        });
+    });
+}
+
+function toggleFavorite(button) {
+    const artId = parseInt(button.dataset.id);
+    const isFavorited = favorites.includes(artId);
+    if (isFavorited) {
+        favorites = favorites.filter(id => id !== artId);
+    } else {
+        favorites.push(artId);
+    }
+    localStorage.setItem('metFavorites', JSON.stringify(favorites));
+    button.classList.toggle('favorited');
 }
 
 function showArtDetail(art) {
@@ -120,6 +197,7 @@ function showArtDetail(art) {
     currentArtObject = art; // Store the current art object
     artGallery.style.display = 'none';
     searchSection.style.display = 'none';
+    paginationSection.style.display = 'none';
     noResultsMessage.style.display = 'none';
     artDetailSection.style.display = 'block';
     window.scrollTo(0, 0); // Scroll to top
@@ -139,6 +217,7 @@ function hideArtDetail() {
     const searchSection = document.getElementById('search-section');
     artGallery.style.display = 'grid';
     searchSection.style.display = 'block';
+    if (!isFavoritesView && allObjectIDs.length > artGallery.children.length) paginationSection.style.display = 'block';
     artDetailSection.style.display = 'none';
     currentArtObject = null; // Clear the current art object
     geminiText.textContent = 'Loading insights...'; // Reset Gemini text
@@ -198,11 +277,38 @@ async function getGeminiFact(artDetails) {
 
 searchButton.addEventListener('click', async () => {
     const query = searchInput.value.trim();
+    searchInput.blur();
     if (query) {
         const artPieces = await searchMetArt(query);
-        displayArtPieces(artPieces);
+        displayArtPieces(artPieces, true);
     } else {
         searchError.textContent = 'Please enter a search term.';
+    }
+});
+
+loadMoreButton.addEventListener('click', async () => {
+    currentPage++;
+    const artPieces = await loadMoreArt();
+    displayArtPieces(artPieces, false);
+});
+
+favoritesNavButton.addEventListener('click', async () => {
+    isFavoritesView = true;
+    artGallery.innerHTML = '';
+    paginationSection.style.display = 'none';
+    noResultsMessage.style.display = 'none';
+    searchError.textContent = '';
+    loadingSpinner.style.display = 'block';
+
+    if (favorites.length === 0) {
+        loadingSpinner.style.display = 'none';
+        noResultsMessage.textContent = "You haven't favorited any art yet.";
+        noResultsMessage.style.display = 'block';
+    } else {
+        const artPromises = favorites.map(id => getArtDetails(id));
+        const artPieces = await Promise.all(artPromises.map(p => p.catch(e => null)));
+        loadingSpinner.style.display = 'none';
+        displayArtPieces(artPieces.filter(p => p), true);
     }
 });
 
@@ -226,5 +332,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set copyright year dynamically
     const copyright = document.getElementById('copyright');
     copyright.innerHTML = `&copy; ${new Date().getFullYear()} Met Gallery AI Guide`;
-    searchMetArt('painting').then(displayArtPieces); // Load some default art on startup
+    searchMetArt('sunflowers').then(artPieces => displayArtPieces(artPieces, true)); // Load some default art on startup
 });
