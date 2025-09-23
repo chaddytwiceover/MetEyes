@@ -23,6 +23,8 @@ const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
 const artGallery = document.getElementById('art-gallery');
 const noResultsMessage = document.getElementById('noResults');
+const searchError = document.getElementById('search-error');
+const loadingSpinner = document.querySelector('.loading-spinner');
 const artDetailSection = document.getElementById('art-detail');
 const backToGalleryButton = document.getElementById('backToGallery');
 const detailImage = document.getElementById('detail-image');
@@ -38,14 +40,21 @@ let currentArtObject = null; // To store the currently displayed art object for 
 // --- Met Gallery API Functions ---
 
 async function searchMetArt(query) {
-    artGallery.innerHTML = '<p>Loading...</p>';
+    // Clear previous results and show spinner
+    artGallery.innerHTML = '';
     noResultsMessage.style.display = 'none';
+    searchError.textContent = '';
+    loadingSpinner.style.display = 'block';
+    searchButton.disabled = true;
 
     try {
         const response = await fetch(`${MET_API_BASE_URL}/search?q=${encodeURIComponent(query)}&hasImages=true`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
 
-        if (data.total === 0) {
+        if (!data.objectIDs || data.total === 0) {
             artGallery.innerHTML = '';
             noResultsMessage.style.display = 'block';
             return [];
@@ -62,8 +71,11 @@ async function searchMetArt(query) {
 
     } catch (error) {
         console.error('Error searching Met Art:', error);
-        artGallery.innerHTML = '<p>Error loading art. Please try again.</p>';
+        searchError.textContent = 'Error loading art. Please check your connection and try again.';
         return [];
+    } finally {
+        loadingSpinner.style.display = 'none';
+        searchButton.disabled = false;
     }
 }
 
@@ -71,6 +83,9 @@ async function getArtDetails(objectId) {
     try {
         const response = await fetch(`${MET_API_BASE_URL}/objects/${objectId}`);
         const data = await response.json();
+        if (!response.ok) {
+            return null; // Silently fail for single object fetch
+        }
         return data;
     } catch (error) {
         console.error(`Error fetching details for object ID ${objectId}:`, error);
@@ -90,7 +105,7 @@ function displayArtPieces(artPieces) {
             const artCard = document.createElement('div');
             artCard.classList.add('art-card');
             artCard.innerHTML = `
-                <img src="${art.primaryImageSmall}" alt="${art.title}">
+                <img src="${art.primaryImageSmall}" alt="Artwork titled: ${art.title || 'Untitled'}">
                 <h3>${art.title || 'Untitled'}</h3>
                 <p>${art.artistDisplayName || 'Unknown Artist'}</p>
             `;
@@ -101,13 +116,16 @@ function displayArtPieces(artPieces) {
 }
 
 function showArtDetail(art) {
+    const searchSection = document.getElementById('search-section');
     currentArtObject = art; // Store the current art object
     artGallery.style.display = 'none';
     searchSection.style.display = 'none';
+    noResultsMessage.style.display = 'none';
     artDetailSection.style.display = 'block';
+    window.scrollTo(0, 0); // Scroll to top
 
     detailImage.src = art.primaryImage || art.primaryImageSmall || 'https://via.placeholder.com/400?text=No+Image';
-    detailImage.alt = art.title;
+    detailImage.alt = `Artwork titled: ${art.title || 'Untitled'}`;
     detailTitle.textContent = art.title || 'Untitled';
     detailArtist.textContent = art.artistDisplayName || 'Unknown Artist';
     detailDate.textContent = `Date: ${art.objectDate || 'N/A'}`;
@@ -118,6 +136,7 @@ function showArtDetail(art) {
 }
 
 function hideArtDetail() {
+    const searchSection = document.getElementById('search-section');
     artGallery.style.display = 'grid';
     searchSection.style.display = 'block';
     artDetailSection.style.display = 'none';
@@ -157,6 +176,9 @@ async function getGeminiFact(artDetails) {
         if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
             const geminiResponseText = data.candidates[0].content.parts[0].text;
             geminiText.textContent = geminiResponseText;
+        } else if (data.error) {
+            console.error("Gemini API Error:", data.error.message);
+            geminiText.textContent = `Could not get insights. Gemini API error: ${data.error.message}`;
         } else {
             geminiText.textContent = 'Could not retrieve insights from Gemini. Please try again.';
         }
@@ -164,7 +186,10 @@ async function getGeminiFact(artDetails) {
         console.error('Error fetching from Gemini API:', error);
         geminiText.textContent = 'Error connecting to Gemini API. Check your key and network.';
     } finally {
-        askGeminiButton.style.display = 'block'; // Re-show button for another query if desired
+        // Re-show button unless there was a critical API key error
+        if (!geminiText.textContent.includes("API key")) {
+            askGeminiButton.style.display = 'block';
+        }
     }
 }
 
@@ -177,7 +202,7 @@ searchButton.addEventListener('click', async () => {
         const artPieces = await searchMetArt(query);
         displayArtPieces(artPieces);
     } else {
-        alert('Please enter a search query.');
+        searchError.textContent = 'Please enter a search term.';
     }
 });
 
@@ -198,5 +223,8 @@ askGeminiButton.addEventListener('click', () => {
 // Initial load: You might want to display some popular art or a default search
 // For now, let's just make sure the gallery is visible.
 document.addEventListener('DOMContentLoaded', () => {
+    // Set copyright year dynamically
+    const copyright = document.getElementById('copyright');
+    copyright.innerHTML = `&copy; ${new Date().getFullYear()} Met Gallery AI Guide`;
     searchMetArt('painting').then(displayArtPieces); // Load some default art on startup
 });
