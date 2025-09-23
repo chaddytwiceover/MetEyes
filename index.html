@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Met Gallery AI Guide</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Met Gallery AI Guide</h1>
+        <p>Explore art with your personal AI assistant!</p>
+    </header>
+
+    <main>
+        <section id="search-section">
+            <input type="text" id="searchInput" placeholder="Search for art (e.g., 'impressionism', 'Monet')">
+            <button id="searchButton">Search</button>
+        </section>
+
+        <section id="art-gallery">
+            <!-- Art pieces will be dynamically loaded here -->
+            <p id="noResults" style="display: none;">No results found. Try a different search!</p>
+        </section>
+
+        <section id="art-detail" style="display: none;">
+            <button id="backToGallery">Back to Gallery</button>
+            <div id="art-info">
+                <img id="detail-image" src="" alt="Art Piece">
+                <h2 id="detail-title"></h2>
+                <p id="detail-artist"></p>
+                <p id="detail-date"></p>
+                <p id="detail-medium"></p>
+                <div id="gemini-response">
+                    <h3>Gemini's Insights:</h3>
+                    <p id="gemini-text">Loading insights...</p>
+                    <button id="askGeminiButton" style="display: none;">Ask Gemini about this art</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Met Gallery AI Guide</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
