@@ -32,7 +32,7 @@ const detailArtist = document.getElementById('detail-artist');
 const detailDate = document.getElementById('detail-date');
 const detailMedium = document.getElementById('detail-medium');
 const geminiText = document.getElementById('gemini-text');
-const detailFavButton = document.getElementById('detail-fav-btn');
+const detailFavButton = document.getElementById('fav-btn');
 const askGeminiButton = document.getElementById('askGeminiButton');
 
 // --- State Management ---
@@ -217,6 +217,14 @@ function showArtDetail(art) {
     askGeminiButton.style.display = 'block'; // Show the button to ask Gemini
 }
 
+function handleDetailFavoriteClick() {
+    if (currentArtObject) {
+        const artId = currentArtObject.objectID;
+        toggleFav(artId);
+        renderDetailFavButton(artId);
+    }
+}
+
 function renderDetailFavButton(id) {
     if (!detailFavButton) return;
     detailFavButton.textContent = isFav(id) ? '♥ Favorited' : '♡ Favorite';
@@ -316,14 +324,6 @@ backToGalleryButton.addEventListener('click', hideArtDetail);
 askGeminiButton.addEventListener('click', () => {
     if (currentArtObject) {
         getGeminiFact(currentArtObject);
-    }
-});
-
-detailFavButton.addEventListener('click', () => {
-    if (currentArtObject) {
-        const artId = currentArtObject.objectID;
-        toggleFav(artId);
-        renderDetailFavButton(artId);
     }
 });
 
