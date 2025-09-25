@@ -1,0 +1,37 @@
+{
+  "name": "meteyes",
+  "version": "1.0.0",
+  "description": "Met Gallery AI Guide - A web application to explore the Metropolitan Museum of Art collection with AI assistance",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "met-museum",
+    "art",
+    "gallery",
+    "ai",
+    "gemini"
+  ],
+  "author": "MetEyes",
+  "license": "MIT",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"],
+    "testMatch": [
+      "<rootDir>/src/**/*.test.js",
+      "<rootDir>/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "public/**/*.js",
+      "!**/node_modules/**"
+    ]
+  }
+}
