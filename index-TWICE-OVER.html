@@ -34,11 +34,11 @@
             <p id="noResults" style="display: none;">No results found. Try a different search!</p>
         </section>
 
-        <div id="pager" class="pager" style="display: none;">
-            <button id="prev" onclick="prevPage()">Previous</button>
+        <section id="pagination-controls" style="display: none;">
+            <button id="prevPageButton" disabled>Previous</button>
             <span id="pager-info"></span>
-            <button id="next" onclick="nextPage()">Next</button>
-        </div>
+            <button id="nextPageButton" disabled>Next</button>
+        </section>
 
         <section id="art-detail" style="display: none;">
             <button id="backToGallery">Back to Gallery</button>
@@ -48,7 +48,6 @@
                 <p id="detail-artist"></p>
                 <p id="detail-date"></p>
                 <p id="detail-medium"></p>
-                <button id="detail-fav-btn" class="detail-fav-btn">♡ Save</button>
                 <div id="gemini-response">
                     <h3>Gemini's Insights:</h3>
                     <p id="gemini-text">Loading insights...</p>

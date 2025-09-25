@@ -20,7 +20,8 @@ const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
 const artGallery = document.getElementById('art-gallery');
 const noResultsMessage = document.getElementById('noResults');
-const pager = document.getElementById('pager');
+const paginationSection = document.getElementById('pagination-section');
+const paginationControls = document.getElementById('pagination-controls');
 const favoritesNavButton = document.getElementById('favoritesNavButton');
 const searchError = document.getElementById('search-error');
 const loadingSpinner = document.querySelector('.loading-spinner');
@@ -32,7 +33,6 @@ const detailArtist = document.getElementById('detail-artist');
 const detailDate = document.getElementById('detail-date');
 const detailMedium = document.getElementById('detail-medium');
 const geminiText = document.getElementById('gemini-text');
-const detailFavButton = document.getElementById('detail-fav-btn');
 const askGeminiButton = document.getElementById('askGeminiButton');
 
 // --- State Management ---
@@ -40,19 +40,8 @@ let currentArtObject = null; // To store the currently displayed art object for 
 let allIds = [];
 let page = 0;
 const PAGE_SIZE = 21;
+let favorites = JSON.parse(localStorage.getItem('metFavorites')) || [];
 let isFavoritesView = false;
-
-// --- Favorites Management (using Set for efficiency) ---
-const FAV_KEY = 'met_favs_v1';
-const getFavs = () => new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
-const isFav = (id) => getFavs().has(id);
-
-function toggleFav(id) {
-    const favsSet = getFavs();
-    favsSet.has(id) ? favsSet.delete(id) : favsSet.add(id);
-    localStorage.setItem(FAV_KEY, JSON.stringify([...favsSet]));
-}
-
 
 // --- Met Gallery API Functions ---
 
@@ -60,7 +49,7 @@ async function searchMetArt(query) {
     isFavoritesView = false;
     page = 0;
     artGallery.innerHTML = '';
-    pager.style.display = 'none';
+    paginationControls.style.display = 'none';
     noResultsMessage.style.display = 'none';
     searchError.textContent = '';
     loadingSpinner.style.display = 'block';
@@ -95,7 +84,7 @@ async function searchMetArt(query) {
 async function renderPage() {
     artGallery.innerHTML = ''; // Clear gallery for the new page
     loadingSpinner.style.display = 'block';
-    pager.style.display = 'none';
+    paginationControls.style.display = 'none';
 
     const idsToFetch = allIds.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
     const detailPromises = idsToFetch.map(id => getArtDetails(id).catch(() => null));
@@ -124,14 +113,14 @@ async function getArtDetails(objectId) {
 function displayArtPieces(artPieces) {
     if (artPieces.length === 0 && page === 0) {
         noResultsMessage.style.display = 'block';
-        pager.style.display = 'none';
+        paginationControls.style.display = 'none';
         return;
     }
     artGallery.innerHTML = ''; // Ensure gallery is clear before adding new pieces
     noResultsMessage.style.display = 'none';
 
     artPieces.forEach(art => {
-        const isFavorited = isFav(art.objectID);
+        const isFavorited = favorites.includes(art.objectID);
         const artCard = document.createElement('div');
         artCard.classList.add('art-card');
         artCard.innerHTML = `
@@ -163,9 +152,7 @@ function displayArtPieces(artPieces) {
         btn.setAttribute('data-listener-added', 'true');
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const artId = parseInt(btn.dataset.id);
-            toggleFav(artId);
-            btn.classList.toggle('favorited', isFav(artId));
+            toggleFavorite(btn);
         });
     });
 }
@@ -189,9 +176,21 @@ function updatePager() {
     pagerInfo.textContent = allIds.length ?
         `Showing ${page * PAGE_SIZE + 1}-${Math.min((page + 1) * PAGE_SIZE, allIds.length)} of ${allIds.length}` :
         'No results';
-    document.getElementById('prev').disabled = page === 0;
-    document.getElementById('next').disabled = (page + 1) * PAGE_SIZE >= allIds.length;
-    if (allIds.length > PAGE_SIZE) pager.style.display = 'flex';
+    document.getElementById('prevPageButton').disabled = page === 0;
+    document.getElementById('nextPageButton').disabled = (page + 1) * PAGE_SIZE >= allIds.length;
+    if (allIds.length > PAGE_SIZE) paginationControls.style.display = 'flex';
+}
+
+function toggleFavorite(button) {
+    const artId = parseInt(button.dataset.id);
+    const isFavorited = favorites.includes(artId);
+    if (isFavorited) {
+        favorites = favorites.filter(id => id !== artId);
+    } else {
+        favorites.push(artId);
+    }
+    localStorage.setItem('metFavorites', JSON.stringify(favorites));
+    button.classList.toggle('favorited');
 }
 
 function showArtDetail(art) {
@@ -199,7 +198,7 @@ function showArtDetail(art) {
     currentArtObject = art; // Store the current art object
     artGallery.style.display = 'none';
     searchSection.style.display = 'none';
-    pager.style.display = 'none';
+    paginationControls.style.display = 'none';
     noResultsMessage.style.display = 'none';
     artDetailSection.style.display = 'block';
     window.scrollTo(0, 0); // Scroll to top
@@ -211,23 +210,15 @@ function showArtDetail(art) {
     detailDate.textContent = `Date: ${art.objectDate || 'N/A'}`;
     detailMedium.textContent = `Medium: ${art.medium || 'N/A'}`;
 
-    renderDetailFavButton(art.objectID);
-
     geminiText.textContent = 'Click below to get insights from Gemini!';
     askGeminiButton.style.display = 'block'; // Show the button to ask Gemini
-}
-
-function renderDetailFavButton(id) {
-    if (!detailFavButton) return;
-    detailFavButton.textContent = isFav(id) ? '♥ Favorited' : '♡ Favorite';
-    detailFavButton.classList.toggle('favorited', isFav(id));
 }
 
 function hideArtDetail() {
     const searchSection = document.getElementById('search-section');
     artGallery.style.display = 'grid';
     searchSection.style.display = 'block';
-    if (!isFavoritesView && allIds.length > artGallery.children.length) pager.style.display = 'flex';
+    if (!isFavoritesView && allIds.length > artGallery.children.length) paginationControls.style.display = 'flex';
     artDetailSection.style.display = 'none';
     currentArtObject = null; // Clear the current art object
     geminiText.textContent = 'Loading insights...'; // Reset Gemini text
@@ -285,21 +276,24 @@ searchButton.addEventListener('click', async () => {
     }
 });
 
+document.getElementById('nextPageButton').addEventListener('click', nextPage);
+document.getElementById('prevPageButton').addEventListener('click', prevPage);
+
+
 favoritesNavButton.addEventListener('click', async () => {
     isFavoritesView = true;
-    pager.style.display = 'none';
+    paginationControls.style.display = 'none';
     noResultsMessage.style.display = 'none';
     searchError.textContent = '';
     loadingSpinner.style.display = 'block';
 
-    const favorites = getFavs();
     if (favorites.length === 0) {
         loadingSpinner.style.display = 'none';
         noResultsMessage.textContent = "You haven't favorited any art yet.";
         noResultsMessage.style.display = 'block';
     } else {
-        const artPromises = [...favorites].map(id => getArtDetails(id));
-        const artPieces = await Promise.all(artPromises.map(p => p.catch(() => null)));
+        const artPromises = favorites.map(id => getArtDetails(id));
+        const artPieces = await Promise.all(artPromises.map(p => p.catch(e => null)));
         loadingSpinner.style.display = 'none';
         displayArtPieces(artPieces.filter(p => p));
     }
@@ -316,14 +310,6 @@ backToGalleryButton.addEventListener('click', hideArtDetail);
 askGeminiButton.addEventListener('click', () => {
     if (currentArtObject) {
         getGeminiFact(currentArtObject);
-    }
-});
-
-detailFavButton.addEventListener('click', () => {
-    if (currentArtObject) {
-        const artId = currentArtObject.objectID;
-        toggleFav(artId);
-        renderDetailFavButton(artId);
     }
 });
 
