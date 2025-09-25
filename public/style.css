@@ -75,24 +75,27 @@ main {
     outline-offset: 2px;
 }
 
-#searchButton, #loadMoreButton, #favoritesNavButton, #prev, #next {
+button {
+    cursor: pointer;
+}
+
+#searchButton, #favoritesNavButton, #prev, #next {
     padding: 10px 20px;
     background-color: var(--accent-color);
     color: #fff;
     border: none;
     border-radius: 4px;
-    cursor: pointer;
 }
 #searchButton:disabled, #prev:disabled, #next:disabled {
     background-color: var(--secondary-color);
     cursor: not-allowed;
 }
 
-#searchButton:hover:not(:disabled), #loadMoreButton:hover, #favoritesNavButton:hover, #prev:hover:not(:disabled), #next:hover:not(:disabled) {
+#searchButton:hover:not(:disabled), #favoritesNavButton:hover, #prev:hover:not(:disabled), #next:hover:not(:disabled) {
     background-color: #5a162c;
 }
 
-#searchButton:focus, #backToGallery:focus, #askGeminiButton:focus, #loadMoreButton:focus, #favoritesNavButton:focus, #prev:focus, #next:focus {
+#searchButton:focus, #backToGallery:focus, #askGeminiButton:focus, #favoritesNavButton:focus, #prev:focus, #next:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
@@ -129,6 +132,7 @@ main {
 .art-card-image-wrapper {
     position: relative;
     height: 250px;
+    background-color: #eee;
 }
 
 .art-card-image-wrapper::after {
@@ -246,6 +250,7 @@ main {
     height: auto;
     display: block;
     margin: 0 auto 20px;
+    background-color: #eee;
 }
 
 #art-detail h2 {
@@ -264,7 +269,6 @@ main {
     color: #fff;
     border: none;
     border-radius: 4px;
-    cursor: pointer;
     margin-bottom: 20px;
 }
 
@@ -278,7 +282,6 @@ main {
     color: var(--accent-color);
     border: 1px solid var(--accent-color);
     border-radius: 4px;
-    cursor: pointer;
     margin: 15px 0;
     font-size: 0.9rem;
     transition: background-color 0.2s, color 0.2s;
@@ -311,12 +314,16 @@ main {
     color: #fff;
     border: none;
     border-radius: 4px;
-    cursor: pointer;
     margin-top: 10px;
 }
 
 #askGeminiButton:hover {
     background-color: #5a162c;
+}
+
+#askGeminiButton:disabled {
+    background-color: var(--secondary-color);
+    cursor: not-allowed;
 }
 
 .pager {
@@ -336,7 +343,7 @@ footer {
     text-align: center;
     padding: 20px;
     margin-top: 40px;
-    background-color: #e0e0e0;
+    background-color: #f1f1f1;
     color: var(--secondary-color);
     font-size: 0.9em;
 }
@@ -346,9 +353,13 @@ footer {
     margin: 0 auto;
 }
 
-/* Accessibility: class to visually hide elements but keep them for screen readers */
+/* --- UTILITY CLASSES --- */
+
+.hidden {
+    display: none !important;
+}
+
 .visually-hidden {
-    position: absolute;
     position: absolute !important;
     width: 1px;
     height: 1px;
@@ -381,6 +392,8 @@ footer {
         opacity: 1;
     }
 }
+
+/* --- RESPONSIVE DESIGN --- */
 
 @media (max-width: 768px) {
     .app-title {

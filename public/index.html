@@ -27,20 +27,25 @@
             <p id="search-error" class="search-error" aria-live="polite"></p>
         </section>
 
-        <section id="art-gallery">
-            <!-- Loading spinner will be injected here -->
-            <div class="loading-spinner" style="display: none;"></div>
-            <!-- Art pieces will be dynamically loaded here -->
-            <p id="noResults" style="display: none;">No results found. Try a different search!</p>
-        </section>
-
-        <div id="pager" class="pager" style="display: none;">
-            <button id="prev" onclick="prevPage()">Previous</button>
-            <span id="pager-info"></span>
-            <button id="next" onclick="nextPage()">Next</button>
+        <div id="loading-container" class="hidden">
+             <div class="loading-spinner"></div>
         </div>
 
-        <section id="art-detail" style="display: none;">
+        <section id="art-gallery-container">
+            <div id="art-gallery">
+                <!-- Art pieces will be dynamically loaded here -->
+            </div>
+             <p id="noResults" class="hidden">No results found. Try a different search!</p>
+        </section>
+
+
+        <div id="pager" class="pager hidden">
+            <button id="prev">Previous</button>
+            <span id="pager-info"></span>
+            <button id="next">Next</button>
+        </div>
+
+        <section id="art-detail" class="hidden">
             <button id="backToGallery">Back to Gallery</button>
             <div id="art-info">
                 <img id="detail-image" src="" alt="Art Piece">
@@ -48,11 +53,11 @@
                 <p id="detail-artist"></p>
                 <p id="detail-date"></p>
                 <p id="detail-medium"></p>
-                <button id="fav-btn" class="detail-fav-btn" onclick="handleDetailFavoriteClick()">♡ Save</button>
+                <button id="detail-fav-btn" class="detail-fav-btn">♡ Favorite</button>
                 <div id="gemini-response">
                     <h3>Gemini's Insights:</h3>
-                    <p id="gemini-text">Loading insights...</p>
-                    <button id="askGeminiButton" style="display: none;">Ask Gemini about this art</button>
+                    <p id="gemini-text">Click below to get insights from Gemini!</p>
+                    <button id="askGeminiButton">Ask Gemini about this art</button>
                 </div>
             </div>
         </section>
