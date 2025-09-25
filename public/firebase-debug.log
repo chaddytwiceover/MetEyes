@@ -79,3 +79,5 @@ Overwriting codebase default...
 
 [info] +  Wrote functions/package.json 
 [info] +  Wrote functions/.eslintrc.js 
+[info] +  Wrote functions/index.js 
+[info] +  Wrote functions/.gitignore 
