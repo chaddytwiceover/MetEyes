@@ -3,7 +3,7 @@
     "source": "functions"
   },
   "hosting": {
-    "public": ".",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -11,10 +11,9 @@
     ],
     "rewrites": [
       {
-        "source": "/api/gemini",
+        "source": "/api/gemini", 
         "function": "geminiProxy"
       }
     ]
   }
 }
-

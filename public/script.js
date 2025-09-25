@@ -1,406 +1,395 @@
 // ===================================================================================
 //
 //  MET GALLERY AI GUIDE - SCRIPT
+//  REFACTORED FOR MODULARITY, STATE MANAGEMENT, AND ROBUSTNESS
 //
 // ===================================================================================
 
-// --- I. CONFIGURATION & GLOBAL VARIABLES ---
-
-const MET_API_BASE_URL = 'https://collectionapi.metmuseum.org/public/collection/v1';
-// The Gemini API is called via a secure serverless proxy function.
-// This URL will point to your deployed Firebase Function.
-const GEMINI_API_PROXY_URL = '/api/gemini'; // This works if using a Firebase Hosting rewrite
-const FAV_KEY = 'met_gallery_favorites_v1';
-const PAGE_SIZE = 21;
-
-
-// --- II. STATE MANAGEMENT ---
-
-// This object holds the application's state.
-let state = {
-    currentArtObject: null, // Stores the art object currently in the detail view
-    allObjectIDs: [],       // Stores all object IDs from a search result
-    currentPage: 0,         // The current page of results we are viewing
-    isFavoritesView: false, // Are we currently viewing the favorites list?
-};
-
-
-// --- III. DOM ELEMENT REFERENCES ---
-
-// Getting references to all the HTML elements we'll need to interact with.
-const searchInput = document.getElementById('searchInput');
-const searchButton = document.getElementById('searchButton');
-const artGalleryContainer = document.getElementById('art-gallery-container');
-const artGallery = document.getElementById('art-gallery');
-const noResultsMessage = document.getElementById('noResults');
-const pager = document.getElementById('pager');
-const favoritesNavButton = document.getElementById('favoritesNavButton');
-const searchError = document.getElementById('search-error');
-const loadingContainer = document.getElementById('loading-container');
-const artDetailSection = document.getElementById('art-detail');
-const searchSection = document.getElementById('search-section');
-
-// Detail View Elements
-const backToGalleryButton = document.getElementById('backToGallery');
-const detailImage = document.getElementById('detail-image');
-const detailTitle = document.getElementById('detail-title');
-const detailArtist = document.getElementById('detail-artist');
-const detailDate = document.getElementById('detail-date');
-const detailMedium = document.getElementById('detail-medium');
-const detailFavButton = document.getElementById('detail-fav-btn');
-const askGeminiButton = document.getElementById('askGeminiButton');
-const geminiText = document.getElementById('gemini-text');
-
-// Pager Elements
-const prevButton = document.getElementById('prev');
-const nextButton = document.getElementById('next');
-const pagerInfo = document.getElementById('pager-info');
-
-
-// --- IV. FAVORITES MANAGEMENT ---
-
-// These functions handle adding, removing, and checking favorite artworks.
-// They use the browser's localStorage to persist favorites across sessions.
-
-const getFavorites = () => new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
-const isFavorite = (id) => getFavorites().has(id);
-
-function toggleFavorite(id) {
-    const favorites = getFavorites();
-    if (favorites.has(id)) {
-        favorites.delete(id);
-    } else {
-        favorites.add(id);
-    }
-    localStorage.setItem(FAV_KEY, JSON.stringify([...favorites]));
-}
-
-
-// --- V. API FUNCTIONS (MET & GEMINI) ---
 
 /**
- * Searches the Met API for artworks matching the query.
- * @param {string} query The user's search term.
+ * Main application module.
+ * This IIFE (Immediately Invoked Function Expression) encapsulates the entire application,
+ * preventing global scope pollution and creating a modular structure.
  */
-async function searchMetArt(query) {
-    state.isFavoritesView = false;
-    state.currentPage = 0;
-    
-    // UI updates for loading state
-    showLoading();
-    searchButton.disabled = true;
-    searchError.textContent = '';
-    noResultsMessage.classList.add('hidden');
-    artGallery.innerHTML = '';
-    
-    try {
-        const response = await fetch(`${MET_API_BASE_URL}/search?q=${encodeURIComponent(query)}&hasImages=true`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const data = await response.json();
-        state.allObjectIDs = (data.objectIDs && data.total > 0) ? data.objectIDs : [];
-        
-        await renderCurrentPage();
-        
-    } catch (error) {
-        console.error('Error searching Met Art:', error);
-        searchError.textContent = 'Error loading art. Please check your connection and try again.';
-        hideLoading();
-    } finally {
-        searchButton.disabled = false;
-    }
-}
+((window, document) => {
+    // --- I. CONFIGURATION ---
+    const C = {
+        MET_API_BASE_URL: 'https://collectionapi.metmuseum.org/public/collection/v1',
+        GEMINI_API_PROXY_URL: '/api/gemini',
+        FAV_KEY: 'met_gallery_favorites_v1',
+        PAGE_SIZE: 21,
+        NO_IMAGE_URL: 'https://via.placeholder.com/300?text=No+Image',
+        DEFAULT_SEARCH: 'sunflowers',
+    };
 
-/**
- * Fetches the details for a single artwork object ID.
- * @param {number} objectId The ID of the artwork to fetch.
- * @returns {Promise<object|null>} A promise that resolves to the art object or null if failed.
- */
-async function getArtDetails(objectId) {
-    try {
-        const response = await fetch(`${MET_API_BASE_URL}/objects/${objectId}`);
-        if (!response.ok) return null; // Silently fail for a single object
-        return await response.json();
-    } catch (error) {
-        console.error(`Error fetching details for object ID ${objectId}:`, error);
-        return null;
-    }
-}
+    // --- II. DOM ELEMENT REFERENCES ---
+    const D = {
+        searchInput: document.getElementById('searchInput'),
+        searchButton: document.getElementById('searchButton'),
+        artGalleryContainer: document.getElementById('art-gallery-container'),
+        artGallery: document.getElementById('art-gallery'),
+        noResultsMessage: document.getElementById('noResults'),
+        pager: document.getElementById('pager'),
+        favoritesNavButton: document.getElementById('favoritesNavButton'),
+        searchError: document.getElementById('search-error'),
+        loadingContainer: document.getElementById('loading-container'),
+        artDetailSection: document.getElementById('art-detail'),
+        searchSection: document.getElementById('search-section'),
+        backToGalleryButton: document.getElementById('backToGallery'),
+        detailImage: document.getElementById('detail-image'),
+        detailTitle: document.getElementById('detail-title'),
+        detailArtist: document.getElementById('detail-artist'),
+        detailDate: document.getElementById('detail-date'),
+        detailMedium: document.getElementById('detail-medium'),
+        detailFavButton: document.getElementById('detail-fav-btn'),
+        askGeminiButton: document.getElementById('askGeminiButton'),
+        geminiText: document.getElementById('gemini-text'),
+        prevButton: document.getElementById('prev'),
+        nextButton: document.getElementById('next'),
+        pagerInfo: document.getElementById('pager-info'),
+        copyright: document.getElementById('copyright'),
+    };
 
-/**
- * Gets AI-powered insights about an artwork from the Gemini API via our secure proxy.
- * @param {object} artDetails The details of the artwork.
- */
-async function getGeminiFact(artDetails) {
-    geminiText.textContent = 'Generating insights...';
-    askGeminiButton.disabled = true;
+    // --- III. STATE MANAGEMENT ---
+    const Store = {
+        _state: {
+            currentArtObject: null,
+            allObjectIDs: [],
+            currentPage: 0,
+            currentView: 'gallery', // 'gallery' or 'detail' or 'favorites'
+            isLoading: true,
+            error: null,
+        },
+        getState() {
+            return this._state;
+        },
+        setState(newState) {
+            this._state = { ...this._state, ...newState };
+            // In a more complex app, a render/update function would be called here.
+        },
+    };
 
-    try {
-        const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
+    // --- IV. FAVORITES MANAGEMENT ---
+    const Favorites = {
+        get: () => new Set(JSON.parse(localStorage.getItem(C.FAV_KEY) || '[]')),
+        has: (id) => Favorites.get().has(id),
+        toggle: (id) => {
+            const favorites = Favorites.get();
+            if (favorites.has(id)) {
+                favorites.delete(id);
+            } else {
+                favorites.add(id);
+            }
+            localStorage.setItem(C.FAV_KEY, JSON.stringify([...favorites]));
+        },
+    };
 
-        const response = await fetch(GEMINI_API_PROXY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, objectID: artDetails.objectID })
-        });
-        
-        const data = await response.json();
+    // --- V. API ABSTRACTION ---
+    const API = {
+        async _fetchJSON(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`API call failed: ${url}`, error);
+                throw error; // Re-throw to be handled by the caller
+            }
+        },
+        searchMet(query) {
+            const url = `${C.MET_API_BASE_URL}/search?q=${encodeURIComponent(query)}&hasImages=true`;
+            return this._fetchJSON(url);
+        },
+        getArtDetails(objectId) {
+            const url = `${C.MET_API_BASE_URL}/objects/${objectId}`;
+            // Return null on failure for individual items to not break Promise.all
+            return this._fetchJSON(url).catch(() => null);
+        },
+        getGeminiFact(artDetails) {
+            const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
+            return this._fetchJSON(C.GEMINI_API_PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt }),
+            });
+        },
+    };
 
-        if (data.text) {
-            geminiText.textContent = data.text;
-        } else if (data.error) {
-            throw new Error(data.error);
-        } else {
-             throw new Error('Invalid response structure from proxy.');
-        }
+    // --- VI. UI RENDERING & MANIPULATION ---
+    const UI = {
+        // --- Component Creators ---
+        createArtCard(art) {
+            const isFavorited = Favorites.has(art.objectID);
+            const card = document.createElement('div');
+            card.className = 'art-card';
+            card.dataset.objectId = art.objectID;
 
-    } catch (error) {
-        console.error('Error fetching from Gemini API proxy:', error);
-        geminiText.textContent = `Error connecting to the AI assistant. ${error.message}`;
-    } finally {
-        askGeminiButton.disabled = false;
-    }
-}
+            const imageWrapper = document.createElement('div');
+            imageWrapper.className = 'art-card-image-wrapper';
+            const img = document.createElement('img');
+            img.src = art.primaryImageSmall || C.NO_IMAGE_URL;
+            img.alt = art.title || 'Untitled';
+            img.loading = 'lazy';
+            imageWrapper.appendChild(img);
 
+            const info = document.createElement('div');
+            info.className = 'art-card-info';
+            info.innerHTML = `<h3>${art.title || 'Untitled'}</h3><p>${art.artistDisplayName || 'Unknown Artist'}</p>`;
 
-// --- VI. DOM MANIPULATION & RENDERING ---
+            const infoHover = document.createElement('div');
+            infoHover.className = 'art-card-info-hover';
+            infoHover.innerHTML = `<h3>${art.title || 'Untitled'}</h3><p>${art.artistDisplayName || 'Unknown Artist'}</p>`;
 
-/**
- * Fetches details for the current page of object IDs and renders them to the gallery.
- */
-async function renderCurrentPage() {
-    showLoading();
-    
-    const idsToFetch = state.allObjectIDs.slice(state.currentPage * PAGE_SIZE, (state.currentPage + 1) * PAGE_SIZE);
-    
-    const detailPromises = idsToFetch.map(id => getArtDetails(id));
-    const artPieces = (await Promise.all(detailPromises)).filter(Boolean); // Filter out any nulls from failed fetches
+            const favButton = document.createElement('button');
+            favButton.className = `favorite-btn ${isFavorited ? 'favorited' : ''}`;
+            favButton.setAttribute('aria-label', 'Toggle Favorite');
+            favButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
 
-    hideLoading();
-    displayArtPieces(artPieces);
-    updatePager();
-}
+            card.append(imageWrapper, info, infoHover, favButton);
+            return card;
+        },
 
-/**
- * Renders an array of art pieces into the main gallery grid.
- * @param {Array<object>} artPieces - An array of artwork objects from the Met API.
- */
-function displayArtPieces(artPieces) {
-    artGallery.innerHTML = ''; 
-    
-    if (artPieces.length === 0) {
-        noResultsMessage.classList.remove('hidden');
-        pager.classList.add('hidden');
-        return;
-    }
-    
-    noResultsMessage.classList.add('hidden');
+        // --- View Updaters ---
+        renderGallery(artPieces) {
+            D.artGallery.innerHTML = '';
+            const { currentView } = Store.getState();
 
-    artPieces.forEach(art => {
-        const isFavorited = isFavorite(art.objectID);
-        const card = document.createElement('div');
-        card.className = 'art-card';
-        card.dataset.objectId = art.objectID;
-        card.innerHTML = `
-            <div class="art-card-image-wrapper">
-                <img src="${art.primaryImageSmall || 'https://via.placeholder.com/300?text=No+Image'}" alt="${art.title || 'Untitled'}" loading="lazy">
-            </div>
-            <div class="art-card-info">
-                <h3>${art.title || 'Untitled'}</h3>
-                <p>${art.artistDisplayName || 'Unknown Artist'}</p>
-            </div>
-            <div class="art-card-info-hover">
-                 <h3>${art.title || 'Untitled'}</h3>
-                 <p>${art.artistDisplayName || 'Unknown Artist'}</p>
-            </div>
-            <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" aria-label="Toggle Favorite">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </button>
-        `;
-        artGallery.appendChild(card);
-    });
-}
+            if (artPieces.length === 0) {
+                D.noResultsMessage.textContent = currentView === 'favorites'
+                    ? "You haven't favorited any art yet."
+                    : 'No results found. Try a different search!';
+                D.noResultsMessage.classList.remove('hidden');
+                D.pager.classList.add('hidden');
+            } else {
+                D.noResultsMessage.classList.add('hidden');
+                const cards = artPieces.map(this.createArtCard);
+                D.artGallery.append(...cards);
+            }
+        },
+        updatePager() {
+            const { allObjectIDs, currentPage, currentView } = Store.getState();
+            if (currentView !== 'gallery' || allObjectIDs.length <= C.PAGE_SIZE) {
+                D.pager.classList.add('hidden');
+                return;
+            }
 
-/**
- * Shows the detailed view for a single artwork.
- * @param {object} art The artwork object to display.
- */
-function showArtDetail(art) {
-    state.currentArtObject = art;
+            D.pager.classList.remove('hidden');
+            const start = currentPage * C.PAGE_SIZE + 1;
+            const end = Math.min((currentPage + 1) * C.PAGE_SIZE, allObjectIDs.length);
+            D.pagerInfo.textContent = `Showing ${start}-${end} of ${allObjectIDs.length}`;
 
-    // Hide gallery view elements
-    artGalleryContainer.classList.add('hidden');
-    searchSection.classList.add('hidden');
-    pager.classList.add('hidden');
-    
-    // Show detail view
-    artDetailSection.classList.remove('hidden');
-    window.scrollTo(0, 0);
+            D.prevButton.disabled = currentPage === 0;
+            D.nextButton.disabled = end >= allObjectIDs.length;
+        },
+        updateDetailView(art) {
+            D.detailImage.src = art.primaryImage || art.primaryImageSmall || C.NO_IMAGE_URL;
+            D.detailImage.alt = `Artwork titled: ${art.title || 'Untitled'}`;
+            D.detailTitle.textContent = art.title || 'Untitled';
+            D.detailArtist.textContent = art.artistDisplayName || 'Unknown Artist';
+            D.detailDate.textContent = `Date: ${art.objectDate || 'N/A'}`;
+            D.detailMedium.textContent = `Medium: ${art.medium || 'N/A'}`;
+            this.updateDetailFavoriteButton(art.objectID);
+            D.geminiText.textContent = 'Click below to get insights from Gemini!';
+            D.askGeminiButton.disabled = false;
+        },
+        updateDetailFavoriteButton(id) {
+            const isFav = Favorites.has(id);
+            D.detailFavButton.textContent = isFav ? '♥ Favorited' : '♡ Favorite';
+            D.detailFavButton.classList.toggle('favorited', isFav);
+        },
 
-    // Populate detail view with art data
-    detailImage.src = art.primaryImage || art.primaryImageSmall || 'https://via.placeholder.com/400?text=No+Image';
-    detailImage.alt = `Artwork titled: ${art.title || 'Untitled'}`;
-    detailTitle.textContent = art.title || 'Untitled';
-    detailArtist.textContent = art.artistDisplayName || 'Unknown Artist';
-    detailDate.textContent = `Date: ${art.objectDate || 'N/A'}`;
-    detailMedium.textContent = `Medium: ${art.medium || 'N/A'}`;
-    
-    updateDetailFavoriteButton(art.objectID);
+        // --- View Toggles ---
+        showLoading(isLoading) {
+            Store.setState({ isLoading });
+            D.loadingContainer.classList.toggle('hidden', !isLoading);
+            D.searchButton.disabled = isLoading;
+            if (isLoading) {
+                D.artGalleryContainer.classList.add('hidden');
+                D.pager.classList.add('hidden');
+                D.searchError.textContent = '';
+            } else {
+                D.artGalleryContainer.classList.remove('hidden');
+            }
+        },
+        showView(view) { // 'gallery' or 'detail'
+            const isDetailView = view === 'detail';
+            D.artGalleryContainer.classList.toggle('hidden', isDetailView);
+            D.searchSection.classList.toggle('hidden', isDetailView);
+            D.artDetailSection.classList.toggle('hidden', !isDetailView);
+            if (isDetailView) {
+                window.scrollTo(0, 0);
+            }
+            this.updatePager();
+        },
+    };
 
-    // Reset Gemini section
-    geminiText.textContent = 'Click below to get insights from Gemini!';
-    askGeminiButton.disabled = false;
-}
+    // --- VII. CONTROLLERS / EVENT HANDLERS ---
+    const App = {
+        async handleSearch(query) {
+            UI.showLoading(true);
+            Store.setState({ currentView: 'gallery', currentPage: 0 });
 
-/** Hides the art detail view and shows the main gallery view. */
-function hideArtDetail() {
-    artDetailSection.classList.add('hidden');
-    
-    artGalleryContainer.classList.remove('hidden');
-    searchSection.classList.remove('hidden');
-    
-    if (!state.isFavoritesView && state.allObjectIDs.length > PAGE_SIZE) {
-        pager.classList.remove('hidden');
-    }
-    
-    state.currentArtObject = null;
-}
+            try {
+                const data = await API.searchMet(query);
+                const objectIDs = (data.objectIDs && data.total > 0) ? data.objectIDs : [];
+                Store.setState({ allObjectIDs: objectIDs });
+                await this.renderCurrentPage();
+            } catch (error) {
+                Store.setState({ error: error.message, allObjectIDs: [] });
+                D.searchError.textContent = 'Error loading art. Please check your connection and try again.';
+                UI.renderGallery([]); // Clear gallery and show no results
+            } finally {
+                UI.showLoading(false);
+            }
+        },
 
-/** Updates the pager text and button states. */
-function updatePager() {
-    if (state.allObjectIDs.length <= PAGE_SIZE) {
-        pager.classList.add('hidden');
-        return;
-    }
-    
-    pager.classList.remove('hidden');
-    const start = state.currentPage * PAGE_SIZE + 1;
-    const end = Math.min((state.currentPage + 1) * PAGE_SIZE, state.allObjectIDs.length);
-    pagerInfo.textContent = `Showing ${start}-${end} of ${state.allObjectIDs.length}`;
-    
-    prevButton.disabled = state.currentPage === 0;
-    nextButton.disabled = end >= state.allObjectIDs.length;
-}
+        async renderCurrentPage() {
+            UI.showLoading(true);
+            const { allObjectIDs, currentPage } = Store.getState();
+            const idsToFetch = allObjectIDs.slice(currentPage * C.PAGE_SIZE, (currentPage + 1) * C.PAGE_SIZE);
 
-/** Updates the favorite button in the detail view. */
-function updateDetailFavoriteButton(id) {
-    const isFav = isFavorite(id);
-    detailFavButton.textContent = isFav ? '♥ Favorited' : '♡ Favorite';
-    detailFavButton.classList.toggle('favorited', isFav);
-}
+            const artPieces = (await Promise.all(idsToFetch.map(API.getArtDetails))).filter(Boolean);
 
-// --- UI Helper Functions ---
-const showLoading = () => {
-    loadingContainer.classList.remove('hidden');
-    artGalleryContainer.classList.add('hidden');
-    pager.classList.add('hidden');
-};
-const hideLoading = () => {
-    loadingContainer.classList.add('hidden');
-    artGalleryContainer.classList.remove('hidden');
-};
+            UI.renderGallery(artPieces);
+            UI.updatePager();
+            UI.showLoading(false);
+        },
 
+        async handleShowFavorites() {
+            UI.showLoading(true);
+            Store.setState({ currentView: 'favorites', allObjectIDs: [], currentPage: 0 });
+            UI.showView('gallery');
 
-// --- VII. EVENT LISTENERS ---
+            const favoriteIDs = [...Favorites.get()];
+            const artPieces = (await Promise.all(favoriteIDs.map(API.getArtDetails))).filter(Boolean);
 
-// This is where we wire up all the user interactions.
+            UI.renderGallery(artPieces);
+            UI.showLoading(false);
+        },
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Set copyright year dynamically
-    document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Met Gallery AI Guide`;
-    
-    // Initial load with a default search term
-    searchMetArt('sunflowers');
-});
+        async handleShowDetail(objectId) {
+            UI.showLoading(true);
+            const artDetails = await API.getArtDetails(objectId);
+            UI.showLoading(false);
 
-searchButton.addEventListener('click', () => {
-    const query = searchInput.value.trim();
-    if (query) {
-        searchMetArt(query);
-    } else {
-        searchError.textContent = 'Please enter a search term.';
-    }
-});
+            if (artDetails) {
+                Store.setState({ currentArtObject: artDetails, currentView: 'detail' });
+                UI.updateDetailView(artDetails);
+                UI.showView('detail');
+            } else {
+                alert('Could not load details for this artwork.');
+            }
+        },
 
-searchInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-        searchButton.click(); // Trigger search on Enter key
-    }
-});
+        handleHideDetail() {
+            const { currentView } = Store.getState();
+            Store.setState({ currentArtObject: null, currentView: currentView === 'favorites' ? 'favorites' : 'gallery' });
+            UI.showView('gallery');
+        },
 
-artGallery.addEventListener('click', async (e) => {
-    const card = e.target.closest('.art-card');
-    if (!card) return;
+        handleToggleFavorite(objectId, cardButton) {
+            Favorites.toggle(objectId);
+            // Update button on card if provided
+            if (cardButton) {
+                cardButton.classList.toggle('favorited', Favorites.has(objectId));
+            }
+            // Update button on detail page if it's the current item
+            const { currentArtObject } = Store.getState();
+            if (currentArtObject && currentArtObject.objectID === objectId) {
+                UI.updateDetailFavoriteButton(objectId);
+            }
+        },
 
-    const objectId = parseInt(card.dataset.objectId);
-    const favButton = e.target.closest('.favorite-btn');
+        async handleAskGemini() {
+            const { currentArtObject } = Store.getState();
+            if (!currentArtObject) return;
 
-    if (favButton) {
-        e.stopPropagation();
-        toggleFavorite(objectId);
-        favButton.classList.toggle('favorited', isFavorite(objectId));
-    } else {
-        // Fetch full details for the detail view
-        showLoading();
-        const artDetails = await getArtDetails(objectId);
-        hideLoading();
-        if (artDetails) {
-            showArtDetail(artDetails);
-        } else {
-            alert("Could not load details for this artwork.");
-        }
-    }
-});
+            D.geminiText.textContent = 'Generating insights...';
+            D.askGeminiButton.disabled = true;
 
-backToGalleryButton.addEventListener('click', hideArtDetail);
+            try {
+                const data = await API.getGeminiFact(currentArtObject);
+                if (data.text) {
+                    D.geminiText.textContent = data.text;
+                } else {
+                    throw new Error(data.error || 'Invalid response from AI assistant.');
+                }
+            } catch (error) {
+                D.geminiText.textContent = `Error connecting to the AI assistant. ${error.message}`;
+            } finally {
+                D.askGeminiButton.disabled = false;
+            }
+        },
 
-detailFavButton.addEventListener('click', () => {
-    if (state.currentArtObject) {
-        const artId = state.currentArtObject.objectID;
-        toggleFavorite(artId);
-        updateDetailFavoriteButton(artId);
-    }
-});
+        handleChangePage(direction) {
+            const { currentPage, allObjectIDs } = Store.getState();
+            const maxPage = Math.ceil(allObjectIDs.length / C.PAGE_SIZE) - 1;
+            let newPage = currentPage + direction;
 
-askGeminiButton.addEventListener('click', () => {
-    if (state.currentArtObject) {
-        getGeminiFact(state.currentArtObject);
-    }
-});
+            if (newPage >= 0 && newPage <= maxPage) {
+                Store.setState({ currentPage: newPage });
+                this.renderCurrentPage();
+            }
+        },
 
-prevButton.addEventListener('click', () => {
-    if (state.currentPage > 0) {
-        state.currentPage--;
-        renderCurrentPage();
-    }
-});
+        // --- Initializer ---
+        init() {
+            // Set dynamic content
+            D.copyright.textContent = `© ${new Date().getFullYear()} Met Gallery AI Guide`;
 
-nextButton.addEventListener('click', () => {
-    const maxPage = Math.ceil(state.allObjectIDs.length / PAGE_SIZE) - 1;
-    if (state.currentPage < maxPage) {
-        state.currentPage++;
-        renderCurrentPage();
-    }
-});
+            // Register all event listeners
+            D.searchButton.addEventListener('click', () => {
+                const query = D.searchInput.value.trim();
+                if (query) {
+                    this.handleSearch(query);
+                } else {
+                    D.searchError.textContent = 'Please enter a search term.';
+                }
+            });
 
-favoritesNavButton.addEventListener('click', async () => {
-    state.isFavoritesView = true;
-    const favoriteIDs = [...getFavorites()];
-    
-    showLoading();
-    pager.classList.add('hidden');
+            D.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') D.searchButton.click();
+            });
 
-    if (favoriteIDs.length === 0) {
-        hideLoading();
-        artGallery.innerHTML = '';
-        noResultsMessage.textContent = "You haven't favorited any art yet.";
-        noResultsMessage.classList.remove('hidden');
-        return;
-    }
-    
-    const artPromises = favoriteIDs.map(id => getArtDetails(id));
-    const artPieces = (await Promise.all(artPromises)).filter(Boolean);
+            D.artGallery.addEventListener('click', (e) => {
+                const card = e.target.closest('.art-card');
+                if (!card) return;
 
-    hideLoading();
-    displayArtPieces(artPieces);
-});
+                const objectId = parseInt(card.dataset.objectId, 10);
+                const favButton = e.target.closest('.favorite-btn');
+
+                if (favButton) {
+                    e.stopPropagation();
+                    this.handleToggleFavorite(objectId, favButton);
+                } else {
+                    this.handleShowDetail(objectId);
+                }
+            });
+
+            D.backToGalleryButton.addEventListener('click', () => this.handleHideDetail());
+
+            D.detailFavButton.addEventListener('click', () => {
+                const { currentArtObject } = Store.getState();
+                if (currentArtObject) {
+                    this.handleToggleFavorite(currentArtObject.objectID);
+                }
+            });
+
+            D.askGeminiButton.addEventListener('click', () => this.handleAskGemini());
+
+            D.prevButton.addEventListener('click', () => this.handleChangePage(-1));
+            D.nextButton.addEventListener('click', () => this.handleChangePage(1));
+
+            D.favoritesNavButton.addEventListener('click', () => this.handleShowFavorites());
+
+            // Initial load
+            this.handleSearch(C.DEFAULT_SEARCH);
+        },
+    };
+
+    // --- VIII. APP INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => App.init());
+
+})(window, document);

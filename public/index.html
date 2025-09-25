@@ -22,12 +22,12 @@
     <main>
         <section id="search-section" role="search" aria-labelledby="search-heading">
             <h2 id="search-heading" class="visually-hidden">Art Search</h2>
-            <input type="text" id="searchInput" placeholder="Search for art (e.g., 'impressionism', 'Monet')">
-            <button id="searchButton">Search</button>
+            <input type="search" id="searchInput" placeholder="Search for art (e.g., 'impressionism', 'Monet')" aria-label="Search for art">
+            <button id="searchButton" aria-label="Submit search">Search</button>
             <p id="search-error" class="search-error" aria-live="polite"></p>
         </section>
 
-        <div id="loading-container" class="hidden">
+        <div id="loading-container" class="hidden" role="status" aria-live="polite">
              <div class="loading-spinner"></div>
         </div>
 
@@ -35,7 +35,7 @@
             <div id="art-gallery">
                 <!-- Art pieces will be dynamically loaded here -->
             </div>
-             <p id="noResults" class="hidden">No results found. Try a different search!</p>
+             <p id="noResults" class="hidden" aria-live="polite">No results found. Try a different search!</p>
         </section>
 
 
@@ -46,7 +46,7 @@
         </div>
 
         <section id="art-detail" class="hidden">
-            <button id="backToGallery">Back to Gallery</button>
+            <button id="backToGallery" aria-label="Go back to gallery view">&larr; Back to Gallery</button>
             <div id="art-info">
                 <img id="detail-image" src="" alt="Art Piece">
                 <h2 id="detail-title"></h2>
@@ -55,7 +55,7 @@
                 <p id="detail-medium"></p>
                 <button id="detail-fav-btn" class="detail-fav-btn">♡ Favorite</button>
                 <div id="gemini-response">
-                    <h3>Gemini's Insights:</h3>
+                    <h3>Gemini's Insights</h3>
                     <p id="gemini-text">Click below to get insights from Gemini!</p>
                     <button id="askGeminiButton">Ask Gemini about this art</button>
                 </div>
