@@ -89,3 +89,75 @@ This project has a solid foundation, but there are many ways it could be extende
 7.  **Deployment & Build Process**:
     - **Problem**: The project is currently run locally.
     - **Solution**: Add instructions for deploying the application to a static hosting service (like Netlify, Vercel, or GitHub Pages). For a more advanced setup, a simple build process could be added to minify CSS and JavaScript for production.
+
+---
+
+## Secure Gemini proxy (Firebase Functions)
+
+This project includes a ready-to-deploy Firebase Cloud Function that acts as a secure proxy to the Google Gemini API. The purpose is to keep your Gemini API key secret and to allow server-side caching and light abuse protection.
+
+What was added:
+
+- `functions/index.js` — a Firebase HTTPS function named `gemini` that accepts POST requests with JSON body `{ prompt: string, objectID?: string }`.
+- `functions/package.json` — function dependencies.
+
+How to deploy (minimal):
+
+1. Install Firebase CLI and login:
+
+```powershell
+npm install -g firebase-tools
+firebase login
+```
+
+2. Initialize functions (if you haven't already) or skip if the `functions` folder is present:
+
+```powershell
+cd path\to\MetEyes
+firebase init functions
+```
+
+3. Set the Gemini API key (option A: environment var via CLI config):
+
+```powershell
+firebase functions:config:set gemini.key="YOUR_GEMINI_API_KEY"
+```
+
+Optional: set a small proxy key to reduce anonymous abuse (server-side check for `x-proxy-key` header):
+
+```powershell
+firebase functions:config:set gemini.proxy_key="SOME_PROXY_SECRET"
+```
+
+4. Deploy the function:
+
+```powershell
+firebase deploy --only functions:gemini
+```
+
+5. Update your frontend `GEMINI_API_PROXY_URL` to point to the deployed function URL, for example `https://us-central1-<project-id>.cloudfunctions.net/gemini` or configure Firebase Hosting rewrites so `/api/gemini` rewrites to the function.
+
+Firebase hosting rewrite example in `firebase.json`:
+
+```json
+{
+  "hosting": {
+    "rewrites": [
+      {
+        "source": "/api/gemini",
+        "function": "gemini"
+      }
+    ]
+  }
+}
+```
+
+Notes & recommendations:
+
+- The cache used by the function is in-memory and ephemeral — it helps reduce duplicated calls while a function instance is warm but is not a persistent cache. For persistent caching use Firestore or Redis.
+- Monitor usage and add rate-limiting or authentication (Firebase Auth + Callable functions) if you see abuse.
+- Keep an eye on Gemini billing and function invocation costs.
+
+This app is intentionally Gemini-only for AI features. It does not use Genkit or any other multi-model orchestration. If you want to add other models later, consider a Genkit-based architecture, but for now the code assumes Gemini as the only model and the serverless proxy is tailored to Gemini's REST endpoint.
+
+This repo also includes `firebase.json` which demonstrates a Hosting rewrite so the frontend can POST to `/api/gemini` and have requests routed to the `gemini` Cloud Function. Adjust the `hosting.public` directory in `firebase.json` as needed for your hosting layout.

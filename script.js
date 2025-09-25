@@ -257,7 +257,7 @@ async function getGeminiFact(artDetails) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ prompt, objectID: artDetails.objectID })
         });
 
         const data = await response.json();
