@@ -6,6 +6,18 @@ Welcome to the Met Gallery AI Guide, a web application designed to help users ex
 
 The goal of this project is to create an engaging and educational experience for art enthusiasts. Users can search for artworks, view high-quality images and details, and get unique, AI-generated insights and analysis on their favorite pieces. It bridges the gap between a traditional online gallery and a personalized, guided tour.
 
+## Table of Contents
+
+- [Purpose](#purpose)
+- [Application Structure](#application-structure)
+- [Getting Started](#getting-started)
+- [Development](#development)
+  - [Code Style and Linting](#code-style-and-linting)
+  - [Testing](#testing)
+- [Contributing](#contributing)
+- [Potential Improvements & Future Features](#potential-improvements--future-features)
+- [Secure Gemini proxy (Firebase Functions)](#secure-gemini-proxy-firebase-functions)
+
 ---
 
 ## Application Structure
@@ -49,6 +61,157 @@ This is the heart of the application, containing all the logic for user interact
   - Handles clicks on the search button, artwork cards, "Back to Gallery" button, and the "Ask Gemini" button.
   - Listens for the `Enter` key in the search input.
   - An initial `DOMContentLoaded` event listener sets the copyright year and performs an initial search to populate the gallery on page load.
+
+---
+
+## Getting Started
+
+Follow these steps to set up and run the Met Gallery AI Guide locally.
+
+### Prerequisites
+
+- **Node.js** (version 14 or higher)
+- **npm** (comes with Node.js)
+- A web browser (Chrome, Firefox, Safari, or Edge)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/chaddytwiceover/MetEyes.git
+   cd MetEyes
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Serve the application:**
+   Since this is a static web application, you can serve it using any static file server. Here are a few options:
+
+   **Option A: Using Python (if installed):**
+   ```bash
+   # Python 3
+   python -m http.server 8000
+   
+   # Python 2
+   python -m SimpleHTTPServer 8000
+   ```
+
+   **Option B: Using Node.js serve package:**
+   ```bash
+   npx serve public
+   ```
+
+   **Option C: Using Live Server (VS Code extension):**
+   - Install the Live Server extension in VS Code
+   - Right-click on `public/index.html` and select "Open with Live Server"
+
+4. **Open your browser:**
+   Navigate to `http://localhost:8000` (or the port shown by your chosen server) to view the application.
+
+---
+
+## Development
+
+### Code Style and Linting
+
+This project uses ESLint to enforce consistent code style and catch potential issues.
+
+**Available linting commands:**
+
+```bash
+# Check code style and potential issues
+npm run lint
+
+# Automatically fix fixable issues
+npm run lint:fix
+```
+
+**ESLint Configuration:**
+- Uses Google JavaScript Style Guide as the base
+- Configured for browser, Node.js, and Jest environments
+- 4-space indentation with 120-character line length
+- Single quotes for main application code
+- Double quotes for Firebase Functions code
+- Special rules for test files to allow Jest globals
+
+**Before committing code:**
+1. Run `npm run lint` to check for style issues
+2. Fix any errors or warnings reported
+3. Use `npm run lint:fix` to automatically fix formatting issues
+
+### Testing
+
+This project includes comprehensive tests for the AI integration functionality.
+
+**Available test commands:**
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (re-runs on file changes)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+**Test Coverage:**
+- **24 test cases** covering all specified scenarios
+- **79.16%** statement coverage
+- **86.95%** branch coverage
+- Tests include successful API calls, error handling, input validation, and edge cases
+
+**Test Architecture:**
+- **Framework:** Jest with jsdom environment
+- **Mocking:** Global fetch mock for API calls
+- **Setup:** Automated test setup with proper cleanup between tests
+- **Organization:** Tests are grouped by functionality for clarity
+
+---
+
+## Contributing
+
+We welcome contributions to improve the Met Gallery AI Guide! Please follow these guidelines:
+
+### Getting Started
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes following the coding standards below
+
+### Coding Standards
+- Follow the existing code style enforced by ESLint
+- Run `npm run lint` before committing to ensure code quality
+- Add tests for new functionality when appropriate
+- Keep commits focused and write clear commit messages
+- Update documentation if you add new features or change existing behavior
+
+### Pull Request Process
+1. **Before submitting:**
+   - Ensure all tests pass: `npm test`
+   - Ensure code passes linting: `npm run lint`
+   - Test your changes manually in the browser
+   - Update the README if you've added new features or changed setup instructions
+
+2. **Submit your PR:**
+   - Use a descriptive title and provide a clear description of changes
+   - Reference any related issues
+   - Include screenshots for UI changes
+   - Be responsive to feedback and make requested changes promptly
+
+3. **Code Review:**
+   - All PRs require review before merging
+   - Address reviewer comments and suggestions
+   - Keep the PR scope focused - smaller PRs are easier to review
+
+### Reporting Issues
+- Use the GitHub Issues tab to report bugs or request features
+- Include steps to reproduce the issue
+- Provide browser version and any error messages
+- For feature requests, explain the use case and expected behavior
 
 ---
 
