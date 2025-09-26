@@ -17,7 +17,7 @@ const C = {
  * Internal fetch JSON helper method
  * @param {string} url - The URL to fetch
  * @param {Object} options - Fetch options
- * @returns {Promise<Object>} - The JSON response
+ * @return {Promise<Object>} - The JSON response
  * @throws {Error} - If the request fails
  */
 async function _fetchJSON(url, options = {}) {
@@ -36,7 +36,7 @@ async function _fetchJSON(url, options = {}) {
 /**
  * Search the Met Museum collection
  * @param {string} query - Search query
- * @returns {Promise<Object>} - Search results
+ * @return {Promise<Object>} - Search results
  */
 function searchMet(query) {
     const url = `${C.MET_API_BASE_URL}/search?q=${encodeURIComponent(query)}&hasImages=true`;
@@ -46,7 +46,7 @@ function searchMet(query) {
 /**
  * Get details for a specific artwork
  * @param {number} objectId - The object ID
- * @returns {Promise<Object|null>} - Art details or null on failure
+ * @return {Promise<Object|null>} - Art details or null on failure
  */
 function getArtDetails(objectId) {
     const url = `${C.MET_API_BASE_URL}/objects/${objectId}`;
@@ -60,7 +60,7 @@ function getArtDetails(objectId) {
  * @param {string} artDetails.title - The artwork title
  * @param {string} [artDetails.artistDisplayName] - The artist name
  * @param {string} [artDetails.objectDate] - The date of creation
- * @returns {Promise<Object>} - Gemini API response
+ * @return {Promise<Object>} - Gemini API response
  * @throws {Error} - If the request fails or artDetails is invalid
  */
 function getGeminiFact(artDetails) {
@@ -68,17 +68,17 @@ function getGeminiFact(artDetails) {
     if (!artDetails || typeof artDetails !== 'object' || Array.isArray(artDetails)) {
         throw new Error('artDetails must be a valid object');
     }
-    
+
     if (!artDetails.title || typeof artDetails.title !== 'string' || artDetails.title.trim() === '') {
         throw new Error('artDetails must have a valid title');
     }
 
     const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
-    
+
     return _fetchJSON(C.GEMINI_API_PROXY_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({prompt}),
     });
 }
 
@@ -88,7 +88,7 @@ const API = {
     searchMet,
     getArtDetails,
     getGeminiFact,
-    constants: C
+    constants: C,
 };
 
 // For Node.js (testing environment)

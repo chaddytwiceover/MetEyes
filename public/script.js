@@ -64,7 +64,7 @@
             return this._state;
         },
         setState(newState) {
-            this._state = { ...this._state, ...newState };
+            this._state = {...this._state, ...newState};
             // In a more complex app, a render/update function would be called here.
         },
     };
@@ -111,8 +111,8 @@
             const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
             return this._fetchJSON(C.GEMINI_API_PROXY_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt }),
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt}),
             });
         },
     };
@@ -154,12 +154,12 @@
         // --- View Updaters ---
         renderGallery(artPieces) {
             D.artGallery.innerHTML = '';
-            const { currentView } = Store.getState();
+            const {currentView} = Store.getState();
 
             if (artPieces.length === 0) {
-                D.noResultsMessage.textContent = currentView === 'favorites'
-                    ? "You haven't favorited any art yet."
-                    : 'No results found. Try a different search!';
+                D.noResultsMessage.textContent = currentView === 'favorites' ?
+                    'You haven\'t favorited any art yet.' :
+                    'No results found. Try a different search!';
                 D.noResultsMessage.classList.remove('hidden');
                 D.pager.classList.add('hidden');
             } else {
@@ -169,7 +169,7 @@
             }
         },
         updatePager() {
-            const { allObjectIDs, currentPage, currentView } = Store.getState();
+            const {allObjectIDs, currentPage, currentView} = Store.getState();
             if (currentView !== 'gallery' || allObjectIDs.length <= C.PAGE_SIZE) {
                 D.pager.classList.add('hidden');
                 return;
@@ -202,7 +202,7 @@
 
         // --- View Toggles ---
         showLoading(isLoading) {
-            Store.setState({ isLoading });
+            Store.setState({isLoading});
             D.loadingContainer.classList.toggle('hidden', !isLoading);
             D.searchButton.disabled = isLoading;
             if (isLoading) {
@@ -229,15 +229,15 @@
     const App = {
         async handleSearch(query) {
             UI.showLoading(true);
-            Store.setState({ currentView: 'gallery', currentPage: 0 });
+            Store.setState({currentView: 'gallery', currentPage: 0});
 
             try {
                 const data = await API.searchMet(query);
                 const objectIDs = (data.objectIDs && data.total > 0) ? data.objectIDs : [];
-                Store.setState({ allObjectIDs: objectIDs });
+                Store.setState({allObjectIDs: objectIDs});
                 await this.renderCurrentPage();
             } catch (error) {
-                Store.setState({ error: error.message, allObjectIDs: [] });
+                Store.setState({error: error.message, allObjectIDs: []});
                 D.searchError.textContent = 'Error loading art. Please check your connection and try again.';
                 UI.renderGallery([]); // Clear gallery and show no results
             } finally {
@@ -247,7 +247,7 @@
 
         async renderCurrentPage() {
             UI.showLoading(true);
-            const { allObjectIDs, currentPage } = Store.getState();
+            const {allObjectIDs, currentPage} = Store.getState();
             const idsToFetch = allObjectIDs.slice(currentPage * C.PAGE_SIZE, (currentPage + 1) * C.PAGE_SIZE);
 
             const artPieces = (await Promise.all(idsToFetch.map(API.getArtDetails))).filter(Boolean);
@@ -259,7 +259,7 @@
 
         async handleShowFavorites() {
             UI.showLoading(true);
-            Store.setState({ currentView: 'favorites', allObjectIDs: [], currentPage: 0 });
+            Store.setState({currentView: 'favorites', allObjectIDs: [], currentPage: 0});
             UI.showView('gallery');
 
             const favoriteIDs = [...Favorites.get()];
@@ -275,7 +275,7 @@
             UI.showLoading(false);
 
             if (artDetails) {
-                Store.setState({ currentArtObject: artDetails, currentView: 'detail' });
+                Store.setState({currentArtObject: artDetails, currentView: 'detail'});
                 UI.updateDetailView(artDetails);
                 UI.showView('detail');
             } else {
@@ -284,8 +284,8 @@
         },
 
         handleHideDetail() {
-            const { currentView } = Store.getState();
-            Store.setState({ currentArtObject: null, currentView: currentView === 'favorites' ? 'favorites' : 'gallery' });
+            const {currentView} = Store.getState();
+            Store.setState({currentArtObject: null, currentView: currentView === 'favorites' ? 'favorites' : 'gallery'});
             UI.showView('gallery');
         },
 
@@ -296,14 +296,14 @@
                 cardButton.classList.toggle('favorited', Favorites.has(objectId));
             }
             // Update button on detail page if it's the current item
-            const { currentArtObject } = Store.getState();
+            const {currentArtObject} = Store.getState();
             if (currentArtObject && currentArtObject.objectID === objectId) {
                 UI.updateDetailFavoriteButton(objectId);
             }
         },
 
         async handleAskGemini() {
-            const { currentArtObject } = Store.getState();
+            const {currentArtObject} = Store.getState();
             if (!currentArtObject) return;
 
             D.geminiText.textContent = 'Generating insights...';
@@ -324,12 +324,12 @@
         },
 
         handleChangePage(direction) {
-            const { currentPage, allObjectIDs } = Store.getState();
+            const {currentPage, allObjectIDs} = Store.getState();
             const maxPage = Math.ceil(allObjectIDs.length / C.PAGE_SIZE) - 1;
-            let newPage = currentPage + direction;
+            const newPage = currentPage + direction;
 
             if (newPage >= 0 && newPage <= maxPage) {
-                Store.setState({ currentPage: newPage });
+                Store.setState({currentPage: newPage});
                 this.renderCurrentPage();
             }
         },
@@ -371,7 +371,7 @@
             D.backToGalleryButton.addEventListener('click', () => this.handleHideDetail());
 
             D.detailFavButton.addEventListener('click', () => {
-                const { currentArtObject } = Store.getState();
+                const {currentArtObject} = Store.getState();
                 if (currentArtObject) {
                     this.handleToggleFavorite(currentArtObject.objectID);
                 }
@@ -391,5 +391,4 @@
 
     // --- VIII. APP INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => App.init());
-
 })(window, document);

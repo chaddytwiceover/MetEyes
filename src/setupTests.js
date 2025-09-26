@@ -7,14 +7,14 @@ global.fetch = jest.fn();
 // Mock console.error to avoid cluttering test output
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+    console.error = jest.fn();
 });
 
 afterAll(() => {
-  console.error = originalConsoleError;
+    console.error = originalConsoleError;
 });
 
 // Clear all mocks between tests
 beforeEach(() => {
-  jest.clearAllMocks();
+    jest.clearAllMocks();
 });
