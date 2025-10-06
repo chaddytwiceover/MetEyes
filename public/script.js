@@ -112,7 +112,10 @@
             return this._fetchJSON(C.GEMINI_API_PROXY_URL, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({prompt}),
+                body: JSON.stringify({
+                    prompt,
+                    objectID: artDetails.objectID,
+                }),
             });
         },
     };
@@ -248,7 +251,24 @@
         async renderCurrentPage() {
             UI.showLoading(true);
             const {allObjectIDs, currentPage} = Store.getState();
-            const idsToFetch = allObjectIDs.slice(currentPage * C.PAGE_SIZE, (currentPage + 1) * C.PAGE_SIZE);
+            
+            // Validate that we have object IDs
+            if (!allObjectIDs || allObjectIDs.length === 0) {
+                UI.renderGallery([]);
+                UI.showLoading(false);
+                return;
+            }
+
+            const startIdx = currentPage * C.PAGE_SIZE;
+            const endIdx = Math.min((currentPage + 1) * C.PAGE_SIZE, allObjectIDs.length);
+            const idsToFetch = allObjectIDs.slice(startIdx, endIdx);
+
+            // Validate pagination bounds
+            if (startIdx >= allObjectIDs.length || idsToFetch.length === 0) {
+                Store.setState({currentPage: 0});
+                UI.showLoading(false);
+                return;
+            }
 
             const artPieces = (await Promise.all(idsToFetch.map(API.getArtDetails))).filter(Boolean);
 
@@ -311,13 +331,18 @@
 
             try {
                 const data = await API.getGeminiFact(currentArtObject);
-                if (data.text) {
+                if (data && data.text) {
                     D.geminiText.textContent = data.text;
+                    if (data.cached) {
+                        D.geminiText.textContent += ' (cached response)';
+                    }
                 } else {
-                    throw new Error(data.error || 'Invalid response from AI assistant.');
+                    throw new Error(data?.error || 'Invalid response from AI assistant.');
                 }
             } catch (error) {
-                D.geminiText.textContent = `Error connecting to the AI assistant. ${error.message}`;
+                console.error('Gemini API error:', error);
+                const errorMsg = error.message || 'Unknown error occurred';
+                D.geminiText.textContent = `Error connecting to the AI assistant. ${errorMsg}`;
             } finally {
                 D.askGeminiButton.disabled = false;
             }

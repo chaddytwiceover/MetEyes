@@ -52,6 +52,7 @@ describe('getGeminiFact', () => {
                             `titled "The Starry Night" by Vincent van Gogh, created around 1889. ` +
                             `Focus on its historical context, artistic style, or significance. ` +
                             `Keep it concise, around 2-3 sentences.`,
+                        objectID: undefined,
                     }),
                 },
             );
@@ -158,36 +159,36 @@ describe('getGeminiFact', () => {
     });
 
     describe('Input Validation', () => {
-        test('should throw error for null artDetails', () => {
-            expect(() => API.getGeminiFact(null)).toThrow('artDetails must be a valid object');
+        test('should reject promise for null artDetails', async () => {
+            await expect(API.getGeminiFact(null)).rejects.toThrow('artDetails must be a valid object');
         });
 
-        test('should throw error for undefined artDetails', () => {
-            expect(() => API.getGeminiFact(undefined)).toThrow('artDetails must be a valid object');
+        test('should reject promise for undefined artDetails', async () => {
+            await expect(API.getGeminiFact(undefined)).rejects.toThrow('artDetails must be a valid object');
         });
 
-        test('should throw error for non-object artDetails', () => {
-            expect(() => API.getGeminiFact('not an object')).toThrow('artDetails must be a valid object');
-            expect(() => API.getGeminiFact(123)).toThrow('artDetails must be a valid object');
-            expect(() => API.getGeminiFact([])).toThrow('artDetails must be a valid object');
+        test('should reject promise for non-object artDetails', async () => {
+            await expect(API.getGeminiFact('not an object')).rejects.toThrow('artDetails must be a valid object');
+            await expect(API.getGeminiFact(123)).rejects.toThrow('artDetails must be a valid object');
+            await expect(API.getGeminiFact([])).rejects.toThrow('artDetails must be a valid object');
         });
 
-        test('should throw error for missing title', () => {
-            expect(() => API.getGeminiFact({})).toThrow('artDetails must have a valid title');
+        test('should reject promise for missing title', async () => {
+            await expect(API.getGeminiFact({})).rejects.toThrow('artDetails must have a valid title');
         });
 
-        test('should throw error for null title', () => {
-            expect(() => API.getGeminiFact({title: null})).toThrow('artDetails must have a valid title');
+        test('should reject promise for null title', async () => {
+            await expect(API.getGeminiFact({title: null})).rejects.toThrow('artDetails must have a valid title');
         });
 
-        test('should throw error for empty title', () => {
-            expect(() => API.getGeminiFact({title: ''})).toThrow('artDetails must have a valid title');
-            expect(() => API.getGeminiFact({title: '   '})).toThrow('artDetails must have a valid title');
+        test('should reject promise for empty title', async () => {
+            await expect(API.getGeminiFact({title: ''})).rejects.toThrow('artDetails must have a valid title');
+            await expect(API.getGeminiFact({title: '   '})).rejects.toThrow('artDetails must have a valid title');
         });
 
-        test('should throw error for non-string title', () => {
-            expect(() => API.getGeminiFact({title: 123})).toThrow('artDetails must have a valid title');
-            expect(() => API.getGeminiFact({title: {}})).toThrow('artDetails must have a valid title');
+        test('should reject promise for non-string title', async () => {
+            await expect(API.getGeminiFact({title: 123})).rejects.toThrow('artDetails must have a valid title');
+            await expect(API.getGeminiFact({title: {}})).rejects.toThrow('artDetails must have a valid title');
         });
     });
 

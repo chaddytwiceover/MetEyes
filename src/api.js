@@ -60,17 +60,18 @@ function getArtDetails(objectId) {
  * @param {string} artDetails.title - The artwork title
  * @param {string} [artDetails.artistDisplayName] - The artist name
  * @param {string} [artDetails.objectDate] - The date of creation
+ * @param {number} [artDetails.objectID] - The Met object ID
  * @return {Promise<Object>} - Gemini API response
  * @throws {Error} - If the request fails or artDetails is invalid
  */
 function getGeminiFact(artDetails) {
     // Input validation
     if (!artDetails || typeof artDetails !== 'object' || Array.isArray(artDetails)) {
-        throw new Error('artDetails must be a valid object');
+        return Promise.reject(new Error('artDetails must be a valid object'));
     }
 
     if (!artDetails.title || typeof artDetails.title !== 'string' || artDetails.title.trim() === '') {
-        throw new Error('artDetails must have a valid title');
+        return Promise.reject(new Error('artDetails must have a valid title'));
     }
 
     const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
@@ -78,7 +79,10 @@ function getGeminiFact(artDetails) {
     return _fetchJSON(C.GEMINI_API_PROXY_URL, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({prompt}),
+        body: JSON.stringify({
+            prompt,
+            objectID: artDetails.objectID,
+        }),
     });
 }
 
