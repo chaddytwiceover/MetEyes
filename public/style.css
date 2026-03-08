@@ -1,14 +1,33 @@
+/* ================================================================
+   CYBERPUNK NEURAL NETWORK THEME
+   ================================================================ */
+
 :root {
-    --bg-color: #FAFAF8;
-    --text-color: #121212;
-    --accent-color: #7B1E3B; /* Deep Burgundy */
-    --secondary-color: #6c757d;
-    --gemini-bg: #f2e9ec;
+    --bg-color: #030711;
+    --bg-card: rgba(5, 15, 35, 0.88);
+    --text-color: #c8d8ff;
+    --text-bright: #e8f0ff;
+    --accent-color: #00f5ff;     /* Electric cyan */
+    --accent-magenta: #ff00aa;   /* Neon magenta */
+    --accent-purple: #7000ff;    /* Deep purple */
+    --secondary-color: #6a7fa8;
+    --gemini-bg: rgba(0, 245, 255, 0.06);
     --gemini-border: var(--accent-color);
-    --font-headline: 'Cormorant Garamond', serif;
-    --font-body: 'Inter', sans-serif;
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --font-headline: 'Orbitron', sans-serif;
+    --font-body: 'Share Tech Mono', monospace;
+    --glow-cyan: 0 0 8px rgba(0, 245, 255, 0.7), 0 0 20px rgba(0, 245, 255, 0.35);
+    --glow-magenta: 0 0 8px rgba(255, 0, 170, 0.7), 0 0 20px rgba(255, 0, 170, 0.35);
+    --border-neon: 1px solid rgba(0, 245, 255, 0.35);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 245, 255, 0.2);
+    --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 245, 255, 0.4);
+}
+
+/* ----------------------------------------------------------------
+   BASE
+   ---------------------------------------------------------------- */
+
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
 body {
@@ -17,20 +36,57 @@ body {
     padding: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
-    padding-top: 80px; /* Space for fixed header */
+    padding-top: 80px;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
+
+/* Neural network canvas background */
+#neural-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Scanline overlay */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.06) 2px,
+        rgba(0, 0, 0, 0.06) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ----------------------------------------------------------------
+   HEADER
+   ---------------------------------------------------------------- */
 
 header {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(250, 250, 248, 0.8);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid #e0e0e0;
+    background-color: rgba(3, 7, 17, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 245, 255, 0.25);
     z-index: 1000;
     transition: background-color 0.3s ease;
+    box-shadow: 0 2px 20px rgba(0, 245, 255, 0.1);
 }
 
 .header-content {
@@ -44,9 +100,27 @@ header {
 
 .app-title {
     font-family: var(--font-headline);
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     margin: 0;
+    color: var(--accent-color);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 0.08em;
+    animation: glitch 8s infinite;
 }
+
+/* Subtle glitch effect on the title */
+@keyframes glitch {
+    0%, 94%, 100% { text-shadow: var(--glow-cyan); transform: none; }
+    95% { text-shadow: -2px 0 var(--accent-magenta), 2px 0 var(--accent-color); transform: skewX(-1deg); }
+    96% { text-shadow: 2px 0 var(--accent-magenta), -2px 0 var(--accent-color); transform: skewX(1deg); }
+    97% { text-shadow: var(--glow-cyan); transform: none; }
+    98% { text-shadow: -1px 0 var(--accent-magenta), 1px 0 var(--accent-color); transform: skewX(-0.5deg); }
+    99% { text-shadow: var(--glow-cyan); transform: none; }
+}
+
+/* ----------------------------------------------------------------
+   MAIN LAYOUT
+   ---------------------------------------------------------------- */
 
 main {
     padding: 20px;
@@ -54,85 +128,150 @@ main {
     margin: 20px auto;
     background-color: transparent;
     box-shadow: none;
+    position: relative;
+    z-index: 2;
 }
+
+/* ----------------------------------------------------------------
+   SEARCH
+   ---------------------------------------------------------------- */
 
 #search-section {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
 }
 
 #searchInput {
-    padding: 10px;
+    padding: 10px 16px;
     width: 70%;
-    max-width: 400px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    max-width: 420px;
+    background: rgba(0, 245, 255, 0.04);
+    border: 1px solid rgba(0, 245, 255, 0.4);
+    border-radius: 2px;
+    color: var(--text-bright);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
     margin-right: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    caret-color: var(--accent-color);
+}
+
+#searchInput::placeholder {
+    color: rgba(106, 127, 168, 0.7);
 }
 
 #searchInput:focus {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 2px;
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: var(--glow-cyan);
 }
+
+/* ----------------------------------------------------------------
+   BUTTONS
+   ---------------------------------------------------------------- */
 
 button {
     cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: 0.05em;
 }
 
 #searchButton, #favoritesNavButton, #prev, #next {
-    padding: 10px 20px;
-    background-color: var(--accent-color);
+    padding: 10px 22px;
+    background: transparent;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 2px;
+    font-size: 0.9rem;
+    transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+    text-transform: uppercase;
+}
+
+#searchButton:hover:not(:disabled),
+#favoritesNavButton:hover,
+#prev:hover:not(:disabled),
+#next:hover:not(:disabled) {
+    background: rgba(0, 245, 255, 0.12);
+    box-shadow: var(--glow-cyan);
     color: #fff;
-    border: none;
-    border-radius: 4px;
 }
+
 #searchButton:disabled, #prev:disabled, #next:disabled {
-    background-color: var(--secondary-color);
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
-#searchButton:hover:not(:disabled), #favoritesNavButton:hover, #prev:hover:not(:disabled), #next:hover:not(:disabled) {
-    background-color: #5a162c;
-}
-
-#searchButton:focus, #backToGallery:focus, #askGeminiButton:focus, #favoritesNavButton:focus, #prev:focus, #next:focus {
+#searchButton:focus, #backToGallery:focus, #askGeminiButton:focus,
+#favoritesNavButton:focus, #prev:focus, #next:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
 
 .search-error {
-    color: #dc3545;
+    color: var(--accent-magenta);
+    text-shadow: var(--glow-magenta);
     margin-top: 10px;
     min-height: 1.2em;
+    font-size: 0.9rem;
 }
+
+/* ----------------------------------------------------------------
+   GALLERY GRID
+   ---------------------------------------------------------------- */
 
 #art-gallery {
-    display: grid; 
+    display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px;
+    gap: 24px;
 }
 
+/* ----------------------------------------------------------------
+   ART CARD
+   ---------------------------------------------------------------- */
+
 .art-card {
-    background-color: var(--bg-color);
-    box-shadow: var(--shadow-sm);
-    border-radius: 8px;
+    background: var(--bg-card);
+    border: var(--border-neon);
+    border-radius: 4px;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     position: relative;
-    opacity: 0; /* Start as transparent for fade-in */
+    opacity: 0;
     animation: fadeIn 0.5s forwards;
+    box-shadow: var(--shadow-card);
+}
+
+.art-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 4;
+}
+
+.art-card:hover::before {
+    opacity: 1;
 }
 
 .art-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: rgba(0, 245, 255, 0.7);
 }
 
 .art-card-image-wrapper {
     position: relative;
     height: 250px;
-    background-color: #eee;
+    background-color: #0a0f1e;
 }
 
 .art-card-image-wrapper::after {
@@ -141,8 +280,8 @@ button {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 50%;
-    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    height: 60%;
+    background: linear-gradient(to top, rgba(3, 7, 17, 0.95), transparent);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -152,7 +291,8 @@ button {
 }
 
 .art-card-info {
-    padding: 15px;
+    padding: 14px 15px;
+    border-top: 1px solid rgba(0, 245, 255, 0.1);
 }
 
 .art-card-info-hover {
@@ -160,7 +300,7 @@ button {
     bottom: 15px;
     left: 15px;
     right: 15px;
-    color: white;
+    color: var(--text-bright);
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -177,19 +317,25 @@ button {
     height: 100%;
     width: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.4s ease;
+    filter: brightness(0.85) saturate(0.9);
 }
 
 .art-card:hover img {
-    transform: scale(1.05);
+    transform: scale(1.06);
+    filter: brightness(0.7) saturate(0.7);
 }
+
+/* ----------------------------------------------------------------
+   FAVORITE BUTTON (CARD)
+   ---------------------------------------------------------------- */
 
 .favorite-btn {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(255, 255, 255, 0.7);
-    border: none;
+    background: rgba(3, 7, 17, 0.75);
+    border: 1px solid rgba(0, 245, 255, 0.35);
     border-radius: 50%;
     width: 36px;
     height: 36px;
@@ -198,45 +344,59 @@ button {
     justify-content: center;
     cursor: pointer;
     z-index: 3;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 .favorite-btn:hover {
-    background: white;
+    background: rgba(255, 0, 170, 0.15);
+    border-color: var(--accent-magenta);
+    box-shadow: var(--glow-magenta);
 }
 
 .favorite-btn svg {
-    width: 20px;
-    height: 20px;
-    stroke: var(--text-color);
+    width: 18px;
+    height: 18px;
+    stroke: var(--accent-color);
     stroke-width: 2;
     fill: none;
     transition: fill 0.2s, stroke 0.2s;
 }
 
 .favorite-btn.favorited svg {
-    fill: var(--accent-color);
-    stroke: var(--accent-color);
+    fill: var(--accent-magenta);
+    stroke: var(--accent-magenta);
 }
 
+/* ----------------------------------------------------------------
+   CARD TEXT
+   ---------------------------------------------------------------- */
+
 .art-card h3 {
-    font-size: 1.1em;
-    margin: 10px 0 5px;
+    font-size: 0.95em;
+    margin: 8px 0 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-bright);
+    font-family: var(--font-headline);
+    font-weight: 400;
+    letter-spacing: 0.04em;
 }
 
 .art-card-info p {
-    font-size: 0.9em;
+    font-size: 0.82em;
     color: var(--secondary-color);
     margin: 0;
 }
 
+/* ----------------------------------------------------------------
+   ART DETAIL VIEW
+   ---------------------------------------------------------------- */
+
 #art-detail {
     padding: 20px;
-    background-color: var(--bg-color);
-    opacity: 0; /* Start as transparent for fade-in */
+    background: transparent;
+    opacity: 0;
     animation: fadeIn 0.5s forwards;
 }
 
@@ -249,82 +409,132 @@ button {
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 0 auto 20px;
-    background-color: #eee;
+    margin: 0 auto 24px;
+    background-color: #0a0f1e;
+    border: var(--border-neon);
+    box-shadow: var(--glow-cyan);
 }
 
 #art-detail h2 {
     font-family: var(--font-headline);
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 2rem;
+    margin-bottom: 12px;
+    color: var(--accent-color);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 0.06em;
 }
 
 #art-detail p {
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    color: var(--text-color);
 }
 
 #backToGallery {
-    padding: 10px 15px;
-    background-color: var(--secondary-color);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    margin-bottom: 20px;
+    padding: 8px 18px;
+    background: transparent;
+    color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
 }
 
 #backToGallery:hover {
-    background-color: #52585d;
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    box-shadow: var(--glow-cyan);
 }
 
 .detail-fav-btn {
-    padding: 8px 15px;
-    background-color: var(--bg-color);
-    color: var(--accent-color);
-    border: 1px solid var(--accent-color);
-    border-radius: 4px;
+    padding: 8px 18px;
+    background: transparent;
+    color: var(--accent-magenta);
+    border: 1px solid var(--accent-magenta);
+    border-radius: 2px;
     margin: 15px 0;
     font-size: 0.9rem;
-    transition: background-color 0.2s, color 0.2s;
+    font-family: var(--font-body);
+    letter-spacing: 0.05em;
+    transition: background 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
 }
 
 .detail-fav-btn:hover {
-    background-color: var(--gemini-bg);
+    background: rgba(255, 0, 170, 0.1);
+    box-shadow: var(--glow-magenta);
 }
 
 .detail-fav-btn.favorited {
-    background-color: var(--accent-color);
-    color: white;
+    background: rgba(255, 0, 170, 0.15);
+    color: var(--accent-magenta);
+    box-shadow: var(--glow-magenta);
 }
+
+/* ----------------------------------------------------------------
+   GEMINI PANEL
+   ---------------------------------------------------------------- */
 
 #gemini-response {
     margin-top: 30px;
-    padding: 15px;
-    background-color: var(--gemini-bg);
-    border-left: 5px solid var(--gemini-border);
-    border-radius: 4px;
+    padding: 18px 20px;
+    background: var(--gemini-bg);
+    border-left: 3px solid var(--accent-color);
+    border-radius: 2px;
+    box-shadow: inset 0 0 20px rgba(0, 245, 255, 0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+#gemini-response::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent-color), transparent);
 }
 
 #gemini-response h3 {
     color: var(--accent-color);
+    text-shadow: var(--glow-cyan);
+    font-family: var(--font-headline);
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0;
 }
 
 #askGeminiButton {
-    padding: 8px 15px;
-    background-color: var(--accent-color);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    margin-top: 10px;
+    padding: 9px 18px;
+    background: rgba(0, 245, 255, 0.08);
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 2px;
+    margin-top: 12px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
 #askGeminiButton:hover {
-    background-color: #5a162c;
+    background: rgba(0, 245, 255, 0.18);
+    box-shadow: var(--glow-cyan);
 }
 
 #askGeminiButton:disabled {
-    background-color: var(--secondary-color);
+    opacity: 0.4;
     cursor: not-allowed;
+    box-shadow: none;
 }
+
+/* ----------------------------------------------------------------
+   PAGER
+   ---------------------------------------------------------------- */
 
 .pager {
     display: flex;
@@ -337,15 +547,24 @@ button {
 
 #pager-info {
     color: var(--secondary-color);
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
 }
+
+/* ----------------------------------------------------------------
+   FOOTER
+   ---------------------------------------------------------------- */
 
 footer {
     text-align: center;
     padding: 20px;
     margin-top: 40px;
-    background-color: #f1f1f1;
+    background: rgba(3, 7, 17, 0.9);
+    border-top: 1px solid rgba(0, 245, 255, 0.15);
     color: var(--secondary-color);
-    font-size: 0.9em;
+    font-size: 0.85em;
+    position: relative;
+    z-index: 2;
 }
 
 .footer-content {
@@ -353,7 +572,9 @@ footer {
     margin: 0 auto;
 }
 
-/* --- UTILITY CLASSES --- */
+/* ----------------------------------------------------------------
+   UTILITY CLASSES
+   ---------------------------------------------------------------- */
 
 .hidden {
     display: none !important;
@@ -371,16 +592,24 @@ footer {
     border: 0;
 }
 
-/* Loading Spinner Styles */
+/* ----------------------------------------------------------------
+   LOADING SPINNER
+   ---------------------------------------------------------------- */
+
 .loading-spinner {
-    border: 5px solid #f3f3f3; /* Light grey */
-    border-top: 5px solid var(--accent-color);
+    border: 3px solid rgba(0, 245, 255, 0.1);
+    border-top: 3px solid var(--accent-color);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin: 40px auto;
+    width: 52px;
+    height: 52px;
+    animation: spin 0.8s linear infinite;
+    margin: 50px auto;
+    box-shadow: var(--glow-cyan);
 }
+
+/* ----------------------------------------------------------------
+   KEYFRAMES
+   ---------------------------------------------------------------- */
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -388,24 +617,32 @@ footer {
 }
 
 @keyframes fadeIn {
-    to {
-        opacity: 1;
-    }
+    to { opacity: 1; }
 }
 
-/* --- RESPONSIVE DESIGN --- */
+/* ----------------------------------------------------------------
+   RESPONSIVE DESIGN
+   ---------------------------------------------------------------- */
 
 @media (max-width: 768px) {
     .app-title {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     #art-gallery {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+    #searchInput {
+        width: 60%;
     }
 }
 
 @media (max-width: 480px) {
     #art-gallery {
         grid-template-columns: 1fr;
+    }
+    #searchInput {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
     }
 }

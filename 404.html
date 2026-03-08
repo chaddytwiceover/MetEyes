@@ -1,33 +1,204 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Page Not Found</title>
+    <title>404 // Signal Lost — MetEyes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px 16px; border-radius: 3px; }
-      #message h3 { color: #888; font-weight: normal; font-size: 16px; margin: 16px 0 12px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
+    <style>
+      :root {
+        --bg: #030711;
+        --accent: #00f5ff;
+        --magenta: #ff00aa;
+        --text: #c8d8ff;
+        --secondary: #6a7fa8;
+        --glow-cyan: 0 0 8px rgba(0,245,255,0.7), 0 0 20px rgba(0,245,255,0.35);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Share Tech Mono', monospace;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      /* Scanline overlay */
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg, transparent, transparent 2px,
+          rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+        );
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      #message {
+        position: relative;
+        z-index: 5;
+        background: rgba(5, 15, 35, 0.9);
+        border: 1px solid rgba(0, 245, 255, 0.35);
+        max-width: 420px;
+        width: 90%;
+        margin: 0 auto;
+        padding: 40px 32px 32px;
+        text-align: center;
+        box-shadow: 0 0 40px rgba(0, 245, 255, 0.1);
+      }
+
+      #message::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      }
+
+      #message h2 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--accent);
+        text-shadow: var(--glow-cyan);
+        margin: 0 0 8px;
+        letter-spacing: 0.1em;
+      }
+
+      #message h1 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 400;
+        color: var(--magenta);
+        margin: 0 0 20px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-shadow: 0 0 8px rgba(255,0,170,0.7);
+      }
+
+      #message p {
+        line-height: 1.6;
+        margin: 0 0 24px;
+        font-size: 0.9rem;
+        color: var(--secondary);
+      }
+
+      #message a {
+        display: inline-block;
+        background: transparent;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        text-decoration: none;
+        padding: 12px 28px;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+
+      #message a:hover {
+        background: rgba(0, 245, 255, 0.12);
+        box-shadow: var(--glow-cyan);
       }
     </style>
   </head>
   <body>
+    <canvas id="c" aria-hidden="true"></canvas>
     <div id="message">
       <h2>404</h2>
-      <h1>Page Not Found</h1>
-      <p>The specified file was not found on this website. Please check the URL for mistakes and try again.</p>
-      <h3>Why am I seeing this?</h3>
-      <p>This page was generated by the Firebase Command-Line Interface. To modify it, edit the <code>404.html</code> file in your project's configured <code>public</code> directory.</p>
+      <h1>Signal Lost</h1>
+      <p>The requested node was not found in the network. The path may be corrupted or no longer exists.</p>
+      <a href="/">Return to Grid</a>
     </div>
+
+    <script>
+      (function() {
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const nodes = [];
+        const NODE_COUNT = 50;
+        const MAX_DIST = 140;
+
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+
+        function spawn() {
+          for (let i = 0; i < NODE_COUNT; i++) {
+            nodes.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              vx: (Math.random() - 0.5) * 0.35,
+              vy: (Math.random() - 0.5) * 0.35,
+              r: Math.random() * 2 + 1,
+            });
+          }
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          for (const n of nodes) {
+            n.x += n.vx; n.y += n.vy;
+            if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+            if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+          }
+
+          for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+              const dx = nodes[i].x - nodes[j].x;
+              const dy = nodes[i].y - nodes[j].y;
+              const d = Math.sqrt(dx*dx + dy*dy);
+              if (d < MAX_DIST) {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0,245,255,${(1 - d/MAX_DIST) * 0.3})`;
+                ctx.lineWidth = 0.7;
+                ctx.moveTo(nodes[i].x, nodes[i].y);
+                ctx.lineTo(nodes[j].x, nodes[j].y);
+                ctx.stroke();
+              }
+            }
+          }
+
+          for (const n of nodes) {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,245,255,0.7)';
+            ctx.shadowColor = '#00f5ff';
+            ctx.shadowBlur = 6;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+
+          requestAnimationFrame(draw);
+        }
+
+        resize();
+        spawn();
+        draw();
+        window.addEventListener('resize', resize);
+      })();
+    </script>
   </body>
 </html>
