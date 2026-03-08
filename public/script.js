@@ -362,7 +362,7 @@
         // --- Initializer ---
         init() {
             // Set dynamic content
-            D.copyright.textContent = `© ${new Date().getFullYear()} Met Gallery AI Guide`;
+            D.copyright.textContent = `© ${new Date().getFullYear()} MetEyes // Neural Art Guide`;
 
             // Register all event listeners
             D.searchButton.addEventListener('click', () => {
@@ -414,6 +414,91 @@
         },
     };
 
-    // --- VIII. APP INITIALIZATION ---
-    document.addEventListener('DOMContentLoaded', () => App.init());
+    // --- VIII. NEURAL NETWORK CANVAS ANIMATION ---
+    const NeuralNet = {
+        canvas: document.getElementById('neural-canvas'),
+        ctx: null,
+        nodes: [],
+        animFrame: null,
+        NODE_COUNT: 60,
+        MAX_DIST: 160,
+        NODE_SPEED: 0.35,
+
+        init() {
+            if (!this.canvas) return;
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            this.spawnNodes();
+            window.addEventListener('resize', () => this.resize());
+            this.animate();
+        },
+
+        resize() {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+        },
+
+        spawnNodes() {
+            this.nodes = [];
+            for (let i = 0; i < this.NODE_COUNT; i++) {
+                this.nodes.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    vx: (Math.random() - 0.5) * this.NODE_SPEED,
+                    vy: (Math.random() - 0.5) * this.NODE_SPEED,
+                    r: Math.random() * 2 + 1,
+                });
+            }
+        },
+
+        animate() {
+            const {ctx, canvas, nodes, MAX_DIST} = this;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move nodes and bounce off edges
+            for (const n of nodes) {
+                n.x += n.vx;
+                n.y += n.vy;
+                if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+                if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+            }
+
+            // Draw connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < MAX_DIST) {
+                        const alpha = (1 - dist / MAX_DIST) * 0.35;
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 245, 255, ${alpha})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw nodes
+            for (const n of nodes) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 245, 255, 0.7)';
+                ctx.shadowColor = '#00f5ff';
+                ctx.shadowBlur = 6;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            this.animFrame = requestAnimationFrame(() => this.animate());
+        },
+    };
+
+    // --- IX. APP INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        NeuralNet.init();
+        App.init();
+    });
 })(window, document);
