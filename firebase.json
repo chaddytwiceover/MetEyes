@@ -8,12 +8,6 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/api/gemini",
-        "function": "geminiProxy"
-      }
     ]
   }
 }

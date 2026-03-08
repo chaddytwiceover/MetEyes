@@ -1,6 +1,6 @@
 // ===================================================================================
 //
-//  MET GALLERY AI GUIDE - SCRIPT
+//  MET GALLERY GUIDE - SCRIPT
 //  REFACTORED FOR MODULARITY, STATE MANAGEMENT, AND ROBUSTNESS
 //
 // ===================================================================================
@@ -15,7 +15,6 @@
     // --- I. CONFIGURATION ---
     const C = {
         MET_API_BASE_URL: 'https://collectionapi.metmuseum.org/public/collection/v1',
-        GEMINI_API_PROXY_URL: '/api/gemini',
         FAV_KEY: 'met_gallery_favorites_v1',
         PAGE_SIZE: 21,
         NO_IMAGE_URL: 'https://via.placeholder.com/300?text=No+Image',
@@ -42,8 +41,6 @@
         detailDate: document.getElementById('detail-date'),
         detailMedium: document.getElementById('detail-medium'),
         detailFavButton: document.getElementById('detail-fav-btn'),
-        askGeminiButton: document.getElementById('askGeminiButton'),
-        geminiText: document.getElementById('gemini-text'),
         prevButton: document.getElementById('prev'),
         nextButton: document.getElementById('next'),
         pagerInfo: document.getElementById('pager-info'),
@@ -106,17 +103,6 @@
             const url = `${C.MET_API_BASE_URL}/objects/${objectId}`;
             // Return null on failure for individual items to not break Promise.all
             return this._fetchJSON(url).catch(() => null);
-        },
-        getGeminiFact(artDetails) {
-            const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
-            return this._fetchJSON(C.GEMINI_API_PROXY_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    prompt,
-                    objectID: artDetails.objectID,
-                }),
-            });
         },
     };
 
@@ -194,8 +180,6 @@
             D.detailDate.textContent = `Date: ${art.objectDate || 'N/A'}`;
             D.detailMedium.textContent = `Medium: ${art.medium || 'N/A'}`;
             this.updateDetailFavoriteButton(art.objectID);
-            D.geminiText.textContent = 'Click below to get insights from Gemini!';
-            D.askGeminiButton.disabled = false;
         },
         updateDetailFavoriteButton(id) {
             const isFav = Favorites.has(id);
@@ -251,7 +235,7 @@
         async renderCurrentPage() {
             UI.showLoading(true);
             const {allObjectIDs, currentPage} = Store.getState();
-            
+
             // Validate that we have object IDs
             if (!allObjectIDs || allObjectIDs.length === 0) {
                 UI.renderGallery([]);
@@ -270,7 +254,7 @@
                 return;
             }
 
-            const artPieces = (await Promise.all(idsToFetch.map(API.getArtDetails))).filter(Boolean);
+            const artPieces = (await Promise.all(idsToFetch.map((id) => API.getArtDetails(id)))).filter(Boolean);
 
             UI.renderGallery(artPieces);
             UI.updatePager();
@@ -283,7 +267,7 @@
             UI.showView('gallery');
 
             const favoriteIDs = [...Favorites.get()];
-            const artPieces = (await Promise.all(favoriteIDs.map(API.getArtDetails))).filter(Boolean);
+            const artPieces = (await Promise.all(favoriteIDs.map((id) => API.getArtDetails(id)))).filter(Boolean);
 
             UI.renderGallery(artPieces);
             UI.showLoading(false);
@@ -322,32 +306,6 @@
             }
         },
 
-        async handleAskGemini() {
-            const {currentArtObject} = Store.getState();
-            if (!currentArtObject) return;
-
-            D.geminiText.textContent = 'Generating insights...';
-            D.askGeminiButton.disabled = true;
-
-            try {
-                const data = await API.getGeminiFact(currentArtObject);
-                if (data && data.text) {
-                    D.geminiText.textContent = data.text;
-                    if (data.cached) {
-                        D.geminiText.textContent += ' (cached response)';
-                    }
-                } else {
-                    throw new Error(data?.error || 'Invalid response from AI assistant.');
-                }
-            } catch (error) {
-                console.error('Gemini API error:', error);
-                const errorMsg = error.message || 'Unknown error occurred';
-                D.geminiText.textContent = `Error connecting to the AI assistant. ${errorMsg}`;
-            } finally {
-                D.askGeminiButton.disabled = false;
-            }
-        },
-
         handleChangePage(direction) {
             const {currentPage, allObjectIDs} = Store.getState();
             const maxPage = Math.ceil(allObjectIDs.length / C.PAGE_SIZE) - 1;
@@ -362,7 +320,7 @@
         // --- Initializer ---
         init() {
             // Set dynamic content
-            D.copyright.textContent = `© ${new Date().getFullYear()} Met Gallery AI Guide`;
+            D.copyright.textContent = `© ${new Date().getFullYear()} Met Gallery Guide`;
 
             // Register all event listeners
             D.searchButton.addEventListener('click', () => {
@@ -401,8 +359,6 @@
                     this.handleToggleFavorite(currentArtObject.objectID);
                 }
             });
-
-            D.askGeminiButton.addEventListener('click', () => this.handleAskGemini());
 
             D.prevButton.addEventListener('click', () => this.handleChangePage(-1));
             D.nextButton.addEventListener('click', () => this.handleChangePage(1));

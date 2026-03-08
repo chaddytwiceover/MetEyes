@@ -6,7 +6,6 @@
 // Configuration constants
 const C = {
     MET_API_BASE_URL: 'https://collectionapi.metmuseum.org/public/collection/v1',
-    GEMINI_API_PROXY_URL: '/api/gemini',
     FAV_KEY: 'met_gallery_favorites_v1',
     PAGE_SIZE: 21,
     NO_IMAGE_URL: 'https://via.placeholder.com/300?text=No+Image',
@@ -54,44 +53,11 @@ function getArtDetails(objectId) {
     return _fetchJSON(url).catch(() => null);
 }
 
-/**
- * Get Gemini fact about an artwork
- * @param {Object} artDetails - The artwork details object
- * @param {string} artDetails.title - The artwork title
- * @param {string} [artDetails.artistDisplayName] - The artist name
- * @param {string} [artDetails.objectDate] - The date of creation
- * @param {number} [artDetails.objectID] - The Met object ID
- * @return {Promise<Object>} - Gemini API response
- * @throws {Error} - If the request fails or artDetails is invalid
- */
-function getGeminiFact(artDetails) {
-    // Input validation
-    if (!artDetails || typeof artDetails !== 'object' || Array.isArray(artDetails)) {
-        return Promise.reject(new Error('artDetails must be a valid object'));
-    }
-
-    if (!artDetails.title || typeof artDetails.title !== 'string' || artDetails.title.trim() === '') {
-        return Promise.reject(new Error('artDetails must have a valid title'));
-    }
-
-    const prompt = `Tell me an interesting fact or provide a brief analysis about the artwork titled "${artDetails.title}" by ${artDetails.artistDisplayName || 'an unknown artist'}, created around ${artDetails.objectDate || 'an unknown date'}. Focus on its historical context, artistic style, or significance. Keep it concise, around 2-3 sentences.`;
-
-    return _fetchJSON(C.GEMINI_API_PROXY_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            prompt,
-            objectID: artDetails.objectID,
-        }),
-    });
-}
-
 // Export for testing
 const API = {
     _fetchJSON,
     searchMet,
     getArtDetails,
-    getGeminiFact,
     constants: C,
 };
 
